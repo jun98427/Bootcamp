@@ -4,7 +4,7 @@ import numpy as np
 import random
 from PyQt5.QtWidgets import QApplication, QLabel, QPushButton, QWidget, QVBoxLayout
 from PyQt5.QtGui import QImage, QPixmap, QPainter, QPen, QColor, QBrush, QPainterPath, QFont, QPolygonF
-from PyQt5.QtCore import Qt, QTimer, QPoint, QPointF
+from PyQt5.QtCore import Qt, QTimer, QPointF, QRect
 import math
 import Camera as cap
  
@@ -19,7 +19,8 @@ colorList = {
     'navy': (30, 58, 95),
     'light_gray': (192, 192, 192),
     'gray': (128, 128, 128),
-    'dark_gray': (64, 64, 64)
+    'dark_gray': (64, 64, 64),
+    'chart_skyblue' : (0, 150, 255)
 }
  
 class CameraApp(QWidget):
@@ -29,8 +30,8 @@ class CameraApp(QWidget):
         # 윈도우 설정
         self.setWindowTitle("🌸 아름다운 카메라 앱 🌸")
         self.setGeometry(100, 100, 640, 480)
-        self.background_white = False  # 배경 색상 상태 추가
-        self.setStyleSheet("background-color: #1E3A5F;")  # 남색 계열 배경
+        self.background_color = 'navy'
+        # self.setStyleSheet("background-color: #1E3A5F;")  # 남색 계열 배경
  
         self.showMaximized() # 최대화면으로 전환
         # self.showFullScreen()  # 전체 화면으로 전환
@@ -42,6 +43,7 @@ class CameraApp(QWidget):
         self.cam_label = QLabel(self)
         self.cam_label.setFixedSize(640, 480)
         self.cam_label.hide()  # 시작 전에는 숨김
+        self.cam_label.setGeometry(200, 60, 640, 480)
  
         self.start_button = QPushButton("✨ 시작하기 ✨", self)
         self.start_button.setStyleSheet("""
@@ -76,14 +78,16 @@ class CameraApp(QWidget):
  
         # 레이아웃
         layout = QVBoxLayout()
-        layout.addWidget(self.cam_label, alignment=Qt.AlignCenter)
+        # layout.addWidget(self.cam_label, alignment=Qt.AlignCenter)
         layout.addWidget(self.start_button, alignment=Qt.AlignCenter)
         self.setLayout(layout)
  
         # 애니메이션을 위한 타이머
         self.timer = QTimer(self)
+        self.timer.start(30)
         self.timer.timeout.connect(self.update_frame)
         self.flowers = []  # 시작 전에는 꽃이 없음
+ 
  
         self.skills = {
             "리더십": 80,
@@ -106,8 +110,8 @@ class CameraApp(QWidget):
         self.start_button.hide()
         self.cam_label.show()
         self.touch_button.show()
-        self.timer.start(30)
-        self.background_white = True  # 배경을 하얀색으로 변경
+       
+        self.background_color = 'white'
         self.update()
  
     def toggle_capture_mode(self):
@@ -133,12 +137,14 @@ class CameraApp(QWidget):
             self.cam_label.hide()  # 카메라 화면 숨기기
             self.touch_button.hide()  # 캡처 모드 버튼 숨기기
             self.update()  # 차트를 그리기 위해 업데이트
+            self.background_color = 'pink'
         self.update()
  
     def update_frame(self):
         """ 카메라 프레임 업데이트 및 배경 애니메이션 & 가이드라인 추가 """
         ret, frame = self.cap.get_frame()
-        if ret:
+       
+        if ret:            
             h, w, ch = frame.shape
             bytes_per_line = ch * w
             qimg = QImage(frame.data, w, h, bytes_per_line, QImage.Format_RGB888)
@@ -148,22 +154,13 @@ class CameraApp(QWidget):
             painter = QPainter(pixmap)
             painter.setRenderHint(QPainter.Antialiasing)
  
-            # 테두리 추가 (검정색, 두께 6)
-            pen = QPen(QColor(0, 0, 0, 255), 8, Qt.SolidLine)
-            painter.setPen(pen)
-            painter.drawRect(0, 0, w , h )
- 
-            # 가이드라인 (흰색, 두께 4)
-            pen = QPen(QColor(255, 255, 255, 255), 4, Qt.SolidLine)
-            painter.setPen(pen)
- 
             # 흉상 가이드라인 (중앙 기준 확대)
             path = QPainterPath()
-            path.moveTo(80, 440)  # 왼쪽 어깨 시작 (기존 40 → 2배)
-            path.cubicTo(200, 280, 440, 280, 560, 440)  # 어깨 곡선 확장 (X, Y 모두 2배)
+            path.moveTo(80, 420)  # 왼쪽 어깨 시작 (기존 40 → 2배)
+            path.cubicTo(200, 300, 440, 300, 560, 420)  # 어깨 곡선 확장 (X, Y 모두 2배)
             path.lineTo(600, 640)  # 팔 아래 (기존 300, 320 → 600, 640)
             path.lineTo(40, 640)  # 반대편 팔 아래 (기존 20, 320 → 40, 640)
-            path.lineTo(80, 440)  # 다시 어깨로
+            path.lineTo(80, 420)  # 다시 어깨로
             path.closeSubpath()
  
             # 검정색 테두리 그리기 (테두리 두께 12 → 2배)
@@ -177,12 +174,12 @@ class CameraApp(QWidget):
             # 머리 (타원형, 중앙 배치)
             painter.setPen(QPen(QColor(0, 0, 0), 12, Qt.SolidLine))
             painter.setBrush(Qt.transparent)  # 내부는 투명
-            painter.drawEllipse(QPointF(320, 200), 120, 140)  # 위치 조정 (기존 160, 100 → 320, 200)
+            painter.drawEllipse(QPointF(320, 190), 120, 140)  # 위치 조정 (기존 160, 100 → 320, 200)
  
             # 원래 흰색 타원 그리기
             painter.setPen(QPen(QColor(255, 255, 255, 255), 8, Qt.SolidLine))  # 흰색 테두리, 두께 8
             painter.setBrush(Qt.transparent)  # 내부는 투명
-            painter.drawEllipse(QPointF(320, 200), 120, 140)  # 크기 및 위치 조정
+            painter.drawEllipse(QPointF(320, 190), 120, 140)  # 크기 및 위치 조정
  
             if self.capture_mode and self.countdown > 0:
                 countdown_text = str(self.countdown)
@@ -203,6 +200,15 @@ class CameraApp(QWidget):
                 painter.setPen(QColor(255, 255, 150, 255))  # 연노랑색
                 painter.drawText(w // 2 - 30, h // 2 + 20, countdown_text)
            
+            # 테두리 추가 (검정색, 두께 6)
+            pen = QPen(QColor(0, 0, 0, 255), 8, Qt.SolidLine)
+            painter.setPen(pen)
+            painter.drawRect(0, 0, w , h )
+ 
+            # 가이드라인 (흰색, 두께 4)
+            pen = QPen(QColor(255, 255, 255, 255), 4, Qt.SolidLine)
+            painter.setPen(pen)
+ 
             painter.end()
             self.cam_label.setPixmap(pixmap)
  
@@ -211,22 +217,37 @@ class CameraApp(QWidget):
  
     def makeBox(self, painter):
         """ 능력치 차트 설명서 """
-        pen = QPen(QColor(255, 255, 255, 255), 8, Qt.SolidLine)
+        pen = QPen(QColor(*colorList['black']), 10, Qt.SolidLine)
         painter.setPen(pen)
         painter.drawRect(25, 25, 400, 500)
+ 
+        pen = QPen(QColor(*colorList['white']), 6, Qt.SolidLine)
+        painter.setPen(pen)
+        painter.drawRect(25, 25, 400, 500)
+ 
+        text = "Hello, World!\nThis is centered text."
+        font = QFont("Arial", 16, QFont.Bold)  # 폰트 설정
+        painter.setFont(font)
+ 
+        # 박스 내부에 텍스트를 중앙 정렬
+        text_rect = QRect(25, 25, 400, 500)
+        painter.drawText(text_rect, Qt.AlignCenter, text)    
  
     def paintEvent(self, event):
         """ 능력치 차트 그리기 """
         painter = QPainter(self)
         painter.setRenderHint(QPainter.Antialiasing)
+        painter.fillRect(self.rect(), QColor(*colorList[self.background_color]))  # 배경을 흰색으로 설정
  
-        if self.background_white:
-            painter.fillRect(self.rect(), QColor(*colorList['pink']))  # 배경을 흰색으로 설정
-        else:
-            painter.fillRect(self.rect(), QColor(*colorList['navy']))  # 원래 남색 계열 배경
  
+        if self.cam_label.isVisible() :
+            painter.setFont(QFont("Arial", 20, QFont.Bold))  # 글꼴 크기 설정
+ 
+            # 흰색 본문 텍스트
+            painter.setPen(QColor(*colorList['black']))  # 연노랑색 (또는 흰색)
+            painter.drawText(300, 40, "🔼 상단의 카메라 렌즈를 바라봐주세요 🔼")
+        
         if not self.cam_label.isVisible() and self.skiils_mode:
-           
             hexagon_center_x = 750
             hexagon_center_y = 270
             hexagon_radius = 150
@@ -240,9 +261,10 @@ class CameraApp(QWidget):
                 QPointF(center.x() + radius * math.cos(angle), center.y() + radius * math.sin(angle))
                 for angle in angles
                 ]
-                painter.setPen(QPen(QColor(*colorList['white'], 200), 1))
+                painter.setPen(QPen(QColor(*colorList['gray'], 200), 1))
                 painter.setBrush(Qt.NoBrush)
                 painter.drawPolygon(QPolygonF(hexagon_points))  # ✅ 리스트 전달
+           
  
             # ⚡ 육각형 중심 및 반지름
             center = QPointF(hexagon_center_x, hexagon_center_y)  
@@ -270,14 +292,14 @@ class CameraApp(QWidget):
             painter.drawPolygon(QPolygonF(hexagon_points))  # ✅ 리스트 전달
  
             # ⚡ 능력치 내부 다각형 그리기 (반투명 색상)
-            painter.setPen(QPen(QColor(*colorList['gray']), 2))
-            painter.setBrush(QBrush(QColor(0, 200, 255, 100)))  # 반투명 파란색 채우기
+            painter.setPen(QPen(QColor(*colorList['dark_gray']), 2))
+            painter.setBrush(QBrush(QColor(*colorList['chart_skyblue'],130)))  # 반투명 파란색 채우기
             painter.drawPolygon(QPolygonF(skill_points))  # ✅ 리스트 전달
  
             # ⚡ 능력치 직선 연결
             for point in hexagon_points:
                 # pen = QPen(QColor(255, 255, 255), 2)  # 흰색, 두께 2
-                painter.setPen(QColor(*colorList['light_gray']))
+                painter.setPen(QColor(*colorList['white']))
                 painter.drawLine(center, point)
  
             # ⚡ 능력치 항목 표시 (찌그러진 육각형 바깥)
@@ -295,7 +317,7 @@ class CameraApp(QWidget):
                 painter.drawText(text_pos, label)
  
             painter.end()
- 
+
     def closeEvent(self, event):
         """ 프로그램 종료 시 카메라 해제 """
         self.cap.close()
