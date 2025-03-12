@@ -3,10 +3,11 @@ import cv2
 import numpy as np
 import random
 from PyQt5.QtWidgets import QApplication, QLabel, QPushButton, QWidget, QVBoxLayout
-from PyQt5.QtGui import QImage, QPixmap, QPainter, QPen, QColor, QBrush, QPainterPath, QFont, QPolygonF
-from PyQt5.QtCore import Qt, QTimer, QPointF, QRect
+from PyQt5.QtGui import QImage, QPixmap, QPainter, QPen, QColor, QBrush, QPainterPath, QFont, QPolygonF, QMovie
+from PyQt5.QtCore import Qt, QTimer, QPointF, QRect, QThread, pyqtSignal
 import math
 import Camera as cap
+import Api as req
  
 # colorList = [(255,0,0),(0,255,0),(0,0,255),(0,0,255),(0,0,255),(255, 182, 193),(30, 58, 95)] # R G B, white, black, pink, navy
 colorList = {
@@ -87,20 +88,16 @@ class CameraApp(QWidget):
         self.timer.start(30)
         self.timer.timeout.connect(self.update_frame)
         self.flowers = []  # 시작 전에는 꽃이 없음
- 
- 
-        self.skills = {
-            "리더십": 80,
-            "매력": 90,
-            "총명함": 85,
-            "신체능력": 75,
-            "신뢰도": 70,
-            "예술력": 95,
-        }
+
+        self.loading_label = QLabel(self)
+        self.movie = QMovie('loading.gif')
+        self.loading_label.setMovie(self.movie)
+        self.loading_label.hide()
+        layout.addWidget(self.loading_label)
  
         # 캡처 모드 관련 변수
         self.capture_mode = False
-        self.skiils_mode = False
+        self.skills_mode = False
         self.countdown = 0
         self.countdown_timer = QTimer(self)
         self.countdown_timer.timeout.connect(self.update_countdown)
@@ -117,8 +114,8 @@ class CameraApp(QWidget):
     def toggle_capture_mode(self):
         """ 카메라 화면 터치 시 캡처 모드 토글 """
         self.capture_mode = not self.capture_mode
-        if self.skiils_mode == False:
-            self.skiils_mode = True
+        # if self.skills_mode == False:
+        #     self.skills_mode = True
         if self.capture_mode:
             self.countdown = 5
             self.countdown_timer.start(1000)
@@ -134,6 +131,7 @@ class CameraApp(QWidget):
             self.countdown_timer.stop()
             self.cap.capture_image()
             self.capture_mode = False
+            self.start_request()
             self.cam_label.hide()  # 카메라 화면 숨기기
             self.touch_button.hide()  # 캡처 모드 버튼 숨기기
             self.update()  # 차트를 그리기 위해 업데이트
@@ -247,7 +245,7 @@ class CameraApp(QWidget):
             painter.setPen(QColor(*colorList['black']))  # 연노랑색 (또는 흰색)
             painter.drawText(300, 40, "🔼 상단의 카메라 렌즈를 바라봐주세요 🔼")
         
-        if not self.cam_label.isVisible() and self.skiils_mode:
+        if not self.cam_label.isVisible() and self.skills_mode:
             hexagon_center_x = 750
             hexagon_center_y = 270
             hexagon_radius = 150
@@ -322,7 +320,25 @@ class CameraApp(QWidget):
         """ 프로그램 종료 시 카메라 해제 """
         self.cap.close()
         event.accept()
- 
+
+    def start_request(self):
+        self.movie.start()
+        self.loading_label.show()  # 로딩 메시지 표시
+
+        # API 요청을 백그라운드에서 실행
+        self.api_thread = req.ApiThread()
+        self.api_thread.finished_signal.connect(self.handle_response)  # 완료 시 실행할 함수 연결
+        self.api_thread.start()
+    
+    def handle_response(self, data):
+        self.loading_label.hide()  # 로딩 메시지 숨김
+        self.skills_mode = True
+        
+        if "error" in data:
+            self.result_label.setText(f"에러 발생: {data['error']}")
+        else:
+            self.skills = data
+
 if __name__ == "__main__":
     app = QApplication(sys.argv)
     window = CameraApp()
