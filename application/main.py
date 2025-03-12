@@ -1,13 +1,12 @@
-import sys
-import cv2
-import numpy as np
-import random
 from PyQt5.QtWidgets import QApplication, QLabel, QPushButton, QWidget, QVBoxLayout
 from PyQt5.QtGui import QImage, QPixmap, QPainter, QPen, QColor, QBrush, QPainterPath, QFont, QPolygonF, QMovie
-from PyQt5.QtCore import Qt, QTimer, QPointF, QRect, QThread, pyqtSignal
+from PyQt5.QtCore import Qt, QTimer, QPointF, QRect
 import math
 import Camera as cap
 import Api as req
+import sys
+import numpy as np
+import random
  
 # colorList = [(255,0,0),(0,255,0),(0,0,255),(0,0,255),(0,0,255),(255, 182, 193),(30, 58, 95)] # R G B, white, black, pink, navy
 colorList = {
@@ -49,12 +48,12 @@ class CameraApp(QWidget):
         self.start_button = QPushButton("✨ 시작하기 ✨", self)
         self.start_button.setStyleSheet("""
             QPushButton {
-                font-size: 24px;
+                font-size: 45px;
                 font-weight: bold;
                 color: white;
                 background-color: rgba(50, 130, 200, 220);
                 border-radius: 25px;
-                padding: 15px 30px;
+                padding: 30px 60px;
                 border: 2px solid white;
             }
             QPushButton:hover {
@@ -62,6 +61,28 @@ class CameraApp(QWidget):
             }
         """)
         self.start_button.clicked.connect(self.start_camera)
+ 
+         # ▶ "초기화" 버튼 추가
+        self.reset_button = QPushButton("처음으로", self)
+        self.reset_button.setStyleSheet("""
+            QPushButton {
+                font-size: 20px;
+                font-weight: bold;
+                color: white;
+                background-color: rgba(70, 220, 200, 220);
+                border-radius: 25px;
+                padding: 15 10px;
+                border: 2px solid white;
+            }
+            QPushButton:hover {
+                background-color: rgba(40, 150, 160, 250);
+            }
+        """)
+        self.reset_button.setGeometry(800, 460, 120, 60)
+        self.reset_button.clicked.connect(self.resetUI)
+        self.reset_button.hide()
+ 
+        self.setCursor(Qt.BlankCursor)
  
         # 투명한 터치 버튼 추가
         self.touch_button = QPushButton(self)
@@ -77,6 +98,18 @@ class CameraApp(QWidget):
         self.touch_button.setGeometry(160, 120, 640, 480)  # (x, y, width, height)
         self.touch_button.hide()
  
+        # 🌸 꽃 애니메이션 관련
+        self.flowers = []  # 꽃 리스트 (위치 정보 저장)
+        self.flower_timer = QTimer(self)
+        self.flower_timer.timeout.connect(self.create_flower)
+        self.flower_pixmap = QPixmap("flower.png")  # 🌸 꽃 이미지 로드
+        self.flower_timer.start(150)  # 0.5초마다 꽃 생성
+ 
+        # 꽃 애니메이션 타이머 (모든 꽃을 움직이게 함)
+        self.animate_flower_timer = QTimer(self)
+        self.animate_flower_timer.timeout.connect(self.animate_flower)
+        self.animate_flower_timer.start(50)  # 50ms마다 모든 꽃 업데이트
+        
         # 레이아웃
         layout = QVBoxLayout()
         # layout.addWidget(self.cam_label, alignment=Qt.AlignCenter)
@@ -85,10 +118,10 @@ class CameraApp(QWidget):
  
         # 애니메이션을 위한 타이머
         self.timer = QTimer(self)
-        self.timer.start(30)
+        self.timer.start(30) #0.03초마다
         self.timer.timeout.connect(self.update_frame)
-        self.flowers = []  # 시작 전에는 꽃이 없음
-
+       
+       # 로딩 애니메이션
         self.loading_label = QLabel(self)
         self.movie = QMovie('loading.gif')
         self.loading_label.setMovie(self.movie)
@@ -102,6 +135,25 @@ class CameraApp(QWidget):
         self.countdown_timer = QTimer(self)
         self.countdown_timer.timeout.connect(self.update_countdown)
  
+    def resetUI(self):
+        """초기 상태로 되돌리기"""
+        self.background_color = 'navy'
+        # self.setStyleSheet("background-color: #1E3A5F;")  # 남색 계열 배경
+ 
+        self.reset_button.hide()
+        self.cam_label.hide()
+ 
+        self.touch_button.hide()
+        self.start_button.show()
+ 
+        self.flower_timer.start(500)
+ 
+        # 캡처 모드 관련 변수
+        self.capture_mode = False
+        self.skills_mode = False
+        self.countdown = 0
+        self.update()
+ 
     def start_camera(self):
         """ 카메라 시작 """
         self.start_button.hide()
@@ -109,13 +161,13 @@ class CameraApp(QWidget):
         self.touch_button.show()
        
         self.background_color = 'white'
+       
         self.update()
  
     def toggle_capture_mode(self):
         """ 카메라 화면 터치 시 캡처 모드 토글 """
         self.capture_mode = not self.capture_mode
-        # if self.skills_mode == False:
-        #     self.skills_mode = True
+        
         if self.capture_mode:
             self.countdown = 5
             self.countdown_timer.start(1000)
@@ -134,7 +186,6 @@ class CameraApp(QWidget):
             self.start_request()
             self.cam_label.hide()  # 카메라 화면 숨기기
             self.touch_button.hide()  # 캡처 모드 버튼 숨기기
-            self.update()  # 차트를 그리기 위해 업데이트
             self.background_color = 'pink'
         self.update()
  
@@ -181,7 +232,7 @@ class CameraApp(QWidget):
  
             if self.capture_mode and self.countdown > 0:
                 countdown_text = str(self.countdown)
-                font = QFont("Arial", 100, QFont.Bold)
+                font = QFont("Consolas", 100, QFont.Bold)
                 painter.setFont(font)
                
                 # 검정색 테두리 그리기
@@ -211,45 +262,91 @@ class CameraApp(QWidget):
             self.cam_label.setPixmap(pixmap)
  
         # 꽃 애니메이션 업데이트
+        # self.update_flowers()
         self.update()
  
     def makeBox(self, painter):
         """ 능력치 차트 설명서 """
-        pen = QPen(QColor(*colorList['black']), 10, Qt.SolidLine)
-        painter.setPen(pen)
-        painter.drawRect(25, 25, 400, 500)
+        painter.setPen(QPen(QColor(*colorList['black']), 10, Qt.SolidLine))
+        painter.drawRect(25, 25, 500, 500)
  
-        pen = QPen(QColor(*colorList['white']), 6, Qt.SolidLine)
-        painter.setPen(pen)
-        painter.drawRect(25, 25, 400, 500)
+        painter.setPen(QPen(QColor(*colorList['white']), 6, Qt.SolidLine))
+        painter.drawRect(25, 25, 500, 500)
  
-        text = "Hello, World!\nThis is centered text."
-        font = QFont("Arial", 16, QFont.Bold)  # 폰트 설정
+        text = "Hello, World!\nThis is centered text.\n당신은 예술인 !"
+        font = QFont("Consolas", 16, QFont.Bold)  # 폰트 설정
         painter.setFont(font)
  
         # 박스 내부에 텍스트를 중앙 정렬
-        text_rect = QRect(25, 25, 400, 500)
+        text_rect = QRect(25, 25, 500, 500)
+        painter.setPen(QPen(QColor(*colorList['black']), 6, Qt.SolidLine))
         painter.drawText(text_rect, Qt.AlignCenter, text)    
+ 
+    def create_flower(self):
+        """꽃을 생성하고 위치를 리스트에 추가"""
+       
+        flower_size = random.randint(20,60)  # 랜덤한 꽃 크기 설정
+        x = random.randint(0, self.width() - flower_size)
+        angle = random.uniform(0, 2 * math.pi)  # 흔들림을 위한 초기 각도 (랜덤)
+        speed = random.uniform(2, 6)  # 낙하 속도 (랜덤)
+ 
+        self.flowers.append([x, -flower_size, angle, speed, flower_size])  # (x, y, 각도, 속도, 크기) 저장
+        self.update()
+       
+        # 🌸 첫 번째 꽃이 생성될 때 애니메이션 타이머 시작
+        if not self.animate_flower_timer.isActive():
+            self.animate_flower_timer.start(50)  # 50ms마다 업데이트
+ 
+    def animate_flower(self):
+        """꽃을 흔들면서 천천히 떨어뜨리는 애니메이션"""
+        new_flowers = []
+       
+        for flower in self.flowers:
+            x, y, angle, speed, flower_size = flower
+           
+            # 흔들림 (좌우 이동)
+            x += math.sin(angle) * 3.0  # 흔들림 폭을 작게 (1.5)
+            angle += 0.1  # 흔들림 속도도 작게 (0.03)
+ 
+            # 낙하 (속도를 유지)
+            y += speed  # 낙하 속도 고정 (점점 빨라지지 않음)
+ 
+            if y < self.height():
+                new_flowers.append([x, y, angle, speed, flower_size])  # 업데이트
+ 
+        self.flowers = new_flowers  # 리스트 업데이트
+        self.update()
+ 
+        # 꽃이 모두 사라지면 타이머 정지 (불필요한 실행 방지)
+        # if not self.flowers:
+        #     self.flower_timer.stop()
  
     def paintEvent(self, event):
         """ 능력치 차트 그리기 """
         painter = QPainter(self)
         painter.setRenderHint(QPainter.Antialiasing)
         painter.fillRect(self.rect(), QColor(*colorList[self.background_color]))  # 배경을 흰색으로 설정
+       
  
- 
-        if self.cam_label.isVisible() :
-            painter.setFont(QFont("Arial", 20, QFont.Bold))  # 글꼴 크기 설정
+        if self.cam_label.isVisible():
+            for x, y, _, _, flower_size in self.flowers:  # 저장된 크기를 가져옴
+                scaled_pixmap = self.flower_pixmap.scaled(flower_size, flower_size, Qt.KeepAspectRatio)
+                painter.drawPixmap(QPointF(x, y), scaled_pixmap)  # 해당 크기로 그림
  
             # 흰색 본문 텍스트
-            painter.setPen(QColor(*colorList['black']))  # 연노랑색 (또는 흰색)
-            painter.drawText(300, 40, "🔼 상단의 카메라 렌즈를 바라봐주세요 🔼")
-        
+            painter.setFont(QFont("Consolas", 20, QFont.Bold))  # 글꼴 크기            
+            painter.setPen(QColor(*colorList['black']))  
+            painter.drawText(280, 40, "🔼 상단의 카메라 렌즈를 바라봐주세요 🔼")
+       
+ 
+        # self.reset_button.show() # 항상 표시 (reset button 수정하기 위해서)
         if not self.cam_label.isVisible() and self.skills_mode:
-            hexagon_center_x = 750
-            hexagon_center_y = 270
+            self.flower_timer.stop()
+            hexagon_center_x = 770
+            hexagon_center_y = 230
             hexagon_radius = 150
             self.makeBox(painter)
+            self.reset_button.show() # reset button 표시
  
             for i in range(6):
                 center = QPointF(hexagon_center_x, hexagon_center_y)  
@@ -262,8 +359,7 @@ class CameraApp(QWidget):
                 painter.setPen(QPen(QColor(*colorList['gray'], 200), 1))
                 painter.setBrush(Qt.NoBrush)
                 painter.drawPolygon(QPolygonF(hexagon_points))  # ✅ 리스트 전달
-           
- 
+            
             # ⚡ 육각형 중심 및 반지름
             center = QPointF(hexagon_center_x, hexagon_center_y)  
             radius = hexagon_radius  
@@ -301,9 +397,9 @@ class CameraApp(QWidget):
                 painter.drawLine(center, point)
  
             # ⚡ 능력치 항목 표시 (찌그러진 육각형 바깥)
-            center2 = QPointF(hexagon_center_x-48, hexagon_center_y+7)
-            radius2 = hexagon_radius+65
-            y_scale = 0.85
+            center2 = QPointF(hexagon_center_x-25, hexagon_center_y+10)
+            radius2 = hexagon_radius+26
+            y_scale = 0.97
  
             for i, label in enumerate(self.skills.keys()):
                 text_pos = QPointF(
@@ -311,34 +407,34 @@ class CameraApp(QWidget):
                     center2.y() + (radius2 * y_scale * math.sin(angles[i]))
                 )
                 painter.setPen(QColor(*colorList['black']))
-                painter.setFont(QFont("Arial", 20, QFont.Bold))
+                painter.setFont(QFont("Consolas", 20, QFont.Bold))
                 painter.drawText(text_pos, label)
  
             painter.end()
-
+   
     def closeEvent(self, event):
         """ 프로그램 종료 시 카메라 해제 """
         self.cap.close()
         event.accept()
-
+ 
     def start_request(self):
         self.movie.start()
         self.loading_label.show()  # 로딩 메시지 표시
-
+ 
         # API 요청을 백그라운드에서 실행
         self.api_thread = req.ApiThread()
         self.api_thread.finished_signal.connect(self.handle_response)  # 완료 시 실행할 함수 연결
         self.api_thread.start()
-    
+ 
     def handle_response(self, data):
         self.loading_label.hide()  # 로딩 메시지 숨김
         self.skills_mode = True
-        
+       
         if "error" in data:
             self.result_label.setText(f"에러 발생: {data['error']}")
         else:
             self.skills = data
-
+ 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
     window = CameraApp()
