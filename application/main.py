@@ -1,14 +1,14 @@
 from PyQt5.QtWidgets import QApplication, QLabel, QPushButton, QWidget, QVBoxLayout
 from PyQt5.QtGui import QImage, QPixmap, QPainter, QPen, QColor, QBrush, QPainterPath, QFont, QPolygonF, QMovie
-from PyQt5.QtCore import Qt, QTimer, QPointF, QRect
+from PyQt5.QtCore import Qt, QTimer, QPoint, QPointF, QRect, QPropertyAnimation
 import math
 import Camera as cap
 import Api as req
 import sys
+import cv2
 import numpy as np
 import random
  
-# colorList = [(255,0,0),(0,255,0),(0,0,255),(0,0,255),(0,0,255),(255, 182, 193),(30, 58, 95)] # R G B, white, black, pink, navy
 colorList = {
     'red': (255, 0, 0),
     'green': (0, 255, 0),
@@ -68,11 +68,11 @@ class CameraApp(QWidget):
             QPushButton {
                 font-size: 20px;
                 font-weight: bold;
-                color: white;
+                color: black;
                 background-color: rgba(70, 220, 200, 220);
                 border-radius: 25px;
                 padding: 15 10px;
-                border: 2px solid white;
+                border: 2px solid black;
             }
             QPushButton:hover {
                 background-color: rgba(40, 150, 160, 250);
@@ -109,7 +109,8 @@ class CameraApp(QWidget):
         self.animate_flower_timer = QTimer(self)
         self.animate_flower_timer.timeout.connect(self.animate_flower)
         self.animate_flower_timer.start(50)  # 50ms마다 모든 꽃 업데이트
-        
+       
+ 
         # 레이아웃
         layout = QVBoxLayout()
         # layout.addWidget(self.cam_label, alignment=Qt.AlignCenter)
@@ -121,12 +122,25 @@ class CameraApp(QWidget):
         self.timer.start(30) #0.03초마다
         self.timer.timeout.connect(self.update_frame)
        
-       # 로딩 애니메이션
+        # loading 창 구현
         self.loading_label = QLabel(self)
-        self.movie = QMovie('loading.gif')
+        self.movie = QMovie("loading.gif")
         self.loading_label.setMovie(self.movie)
+        self.movie.start()  # GIF 실행
+ 
+        # QLabel 크기를 GIF 크기에 맞게 설정
+        self.loading_label.setFixedSize(self.movie.frameRect().size())
+ 
+        # 윈도우 크기 가져오기
+        window_width = self.width()
+        window_height = self.height()
+ 
+        # QLabel을 중앙에 배치
+        center_x = 190 + (window_width - self.loading_label.width()) // 2
+        center_y = 20 + (window_height - self.loading_label.height()) // 2
+ 
+        self.loading_label.move(center_x, center_y)
         self.loading_label.hide()
-        layout.addWidget(self.loading_label)
  
         # 캡처 모드 관련 변수
         self.capture_mode = False
@@ -138,7 +152,6 @@ class CameraApp(QWidget):
     def resetUI(self):
         """초기 상태로 되돌리기"""
         self.background_color = 'navy'
-        # self.setStyleSheet("background-color: #1E3A5F;")  # 남색 계열 배경
  
         self.reset_button.hide()
         self.cam_label.hide()
@@ -317,10 +330,6 @@ class CameraApp(QWidget):
         self.flowers = new_flowers  # 리스트 업데이트
         self.update()
  
-        # 꽃이 모두 사라지면 타이머 정지 (불필요한 실행 방지)
-        # if not self.flowers:
-        #     self.flower_timer.stop()
- 
     def paintEvent(self, event):
         """ 능력치 차트 그리기 """
         painter = QPainter(self)
@@ -359,7 +368,8 @@ class CameraApp(QWidget):
                 painter.setPen(QPen(QColor(*colorList['gray'], 200), 1))
                 painter.setBrush(Qt.NoBrush)
                 painter.drawPolygon(QPolygonF(hexagon_points))  # ✅ 리스트 전달
-            
+           
+ 
             # ⚡ 육각형 중심 및 반지름
             center = QPointF(hexagon_center_x, hexagon_center_y)  
             radius = hexagon_radius  
@@ -418,9 +428,8 @@ class CameraApp(QWidget):
         event.accept()
  
     def start_request(self):
-        self.movie.start()
         self.loading_label.show()  # 로딩 메시지 표시
- 
+       
         # API 요청을 백그라운드에서 실행
         self.api_thread = req.ApiThread()
         self.api_thread.finished_signal.connect(self.handle_response)  # 완료 시 실행할 함수 연결
