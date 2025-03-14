@@ -1,0 +1,17 @@
+description: Ultralytics YOLO11n model trained on /content/data.yaml
+author: Ultralytics
+date: '2025-03-11T02:24:01.771997'
+version: 8.3.87
+license: AGPL-3.0 License (https://ultralytics.com/license)
+docs: https://docs.ultralytics.com
+stride: 32
+task: detect
+batch: 1
+imgsz:
+- 128
+- 128
+names:
+  0: face
+args:
+  batch: 1
+  half: false
