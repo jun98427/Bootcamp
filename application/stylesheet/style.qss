@@ -1,0 +1,18 @@
+QPushButtonStart {
+    font-size: 45px;
+    font-weight: bold;
+    color: white;
+    background-color: rgba(50, 130, 200, 220);
+    border-radius: 25px;
+    padding: 30px 60px;
+    border: 2px solid white;
+    outline: none; /* 포커스 박스 제거 */
+}
+QPushButtonStart:hover {
+    background-color: rgba(30, 100, 170, 250);
+}
+            
+            
+QPushButtonStart:focus {
+    outline: none; /* 포커스 효과 제거 */
+}

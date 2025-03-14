@@ -12,7 +12,6 @@ param_path = "/home/willtek/Bootcamp/face_cls_ncnn_model/best_yolov11n_model.ncn
 bin_path = "/home/willtek/Bootcamp/face_cls_ncnn_model/best_yolov11n_model.ncnn.bin"
 net.load_param(param_path)
 net.load_model(bin_path)
-ex = net.create_extractor()
 
 class Processing() :
     def __init__(self):
@@ -32,7 +31,6 @@ class Processing() :
                 upper_margin = 0
                 y1 = max(0, y1-upper_margin)
                 self.cropped_face = frame[y1:y2, x1:x2]
-                # print("results : ",results)
         return x1, y1, x2, y2
 
     

@@ -1,6 +1,6 @@
 from PyQt5.QtWidgets import QApplication, QLabel, QPushButton, QWidget, QVBoxLayout
 from PyQt5.QtGui import QImage, QPixmap, QPainter, QPen, QColor, QBrush, QPainterPath, QFont, QPolygonF, QMovie, QTransform
-from PyQt5.QtCore import Qt, QTimer, QPoint, QPointF, QRect, QPropertyAnimation
+from PyQt5.QtCore import Qt, QTimer, QPointF, QRect
 import math
 import Camera as cap
 import Processing as pro
@@ -9,23 +9,29 @@ import sys
 import cv2
 import numpy as np
 import random
+import HexagonChart as hexa
 
-# colorList = [(255,0,0),(0,255,0),(0,0,255),(0,0,255),(0,0,255),(255, 182, 193),(30, 58, 95)] # R G B, white, black, pink, navy
 colorList = {
-    'red': (255, 0, 0),
-    'green': (0, 255, 0),
-    'blue': (0, 0, 255),
-    'white': (255, 255, 255),
-    'black': (0, 0, 0),
-    'pink': (255, 192, 203),
-    'navy': (30, 58, 95),
-    'yellow': (255, 255, 0),
-    'light_yellow': (255, 255, 150),
-    'light_gray': (192, 192, 192),
-    'gray': (128, 128, 128),
-    'dark_gray': (64, 64, 64),
-    'chart_skyblue' : (0, 150, 255)
+    'red': QColor(255, 0, 0),
+    'green': QColor(0, 255, 0),
+    'white': QColor(255, 255, 255),
+    'black': QColor(0, 0, 0),
+    'pink': QColor(255, 192, 203),
+    'navy': QColor(30, 58, 95),
+    'yellow': QColor(255, 255, 0),
+    'light_yellow': QColor(255, 255, 150),
+    'gray': QColor(128, 128, 128),
 }
+
+#리더십 매력 신뢰도 피지컬 예술 지능
+skills_calk = [
+    [95, 80, 92.5, 67.5, 70, 90],
+    [77.5, 87.5, 85, 62.5, 80, 77.5],
+    [72.5, 80, 90, 62.5, 65, 82.5],
+    [75, 80, 85, 95, 50, 70],
+    [77.5, 77.5, 80, 55, 92.5, 85],
+    [77.5, 65, 92.5, 65, 50, 90]
+]
 
 class CameraApp(QWidget):
     def __init__(self):
@@ -33,11 +39,8 @@ class CameraApp(QWidget):
 
         # 윈도우 설정
         self.setWindowTitle("🌸 아름다운 카메라 앱 🌸")
-        self.setGeometry(100, 100, 640, 480)
         self.background_color = 'navy'
-        # self.setStyleSheet("background-color: #1E3A5F;")  # 남색 계열 배경
 
-        # self.showMaximized() # 최대화면으로 전환
         self.showFullScreen()  # 전체 화면으로 전환
 
         # 카메라 설정
@@ -93,7 +96,6 @@ class CameraApp(QWidget):
         """)
         self.reset_button.setGeometry(820, 500, 120, 60)
         self.reset_button.clicked.connect(self.resetUI)
-        # self.reset_button.show()
         self.reset_button.hide()
 
         self.finish_button = QPushButton("종료하기", self)
@@ -113,24 +115,23 @@ class CameraApp(QWidget):
         """)
         self.finish_button.setGeometry(620, 500, 120, 60)
         self.finish_button.clicked.connect(self.closeEvent)
-        # self.finish_button.show()
         self.finish_button.hide()
 
         self.setCursor(Qt.BlankCursor)
 
         # 투명한 터치 버튼 추가
-        self.touch_button = QPushButton(self)
-        self.touch_button.setFixedSize(640, 480)
+        # self.touch_button = QPushButton(self)
+        # self.touch_button.setFixedSize(640, 480)
         # self.touch_button.setStyleSheet("color: white;")
-        self.touch_button.setStyleSheet("""
-            QPushButton {
-                background-color: transparent;
-                border: none;
-            }
-        """)
-        self.touch_button.clicked.connect(self.toggle_capture_mode)
-        self.touch_button.setGeometry(200, 90, 640, 480)  # (x, y, width, height)
-        self.touch_button.hide()
+        # self.touch_button.setStyleSheet("""
+        #     QPushButton {
+        #         background-color: transparent;
+        #         border: none;
+        #     }
+        # """)
+        # self.touch_button.clicked.connect(self.toggle_capture_mode)
+        # self.touch_button.setGeometry(200, 90, 640, 480)  # (x, y, width, height)
+        # self.touch_button.hide()
 
         # 꽃 애니메이션 타이머 (모든 꽃을 움직이게 함)
         self.animate_flower_timer = QTimer(self)
@@ -144,15 +145,11 @@ class CameraApp(QWidget):
             self.create_flower(is_initial=True)
         self.flower_timer = QTimer(self)
         self.flower_timer.timeout.connect(self.create_flower)
-        self.flower_pixmap = QPixmap("flower.png")  # 🌸 꽃 이미지 로드
+          # 🌸 꽃 이미지 로드
         self.flower_timer.start(150)  # 0.5초마다 꽃 생성
-
-        
-        
 
         # 레이아웃
         layout = QVBoxLayout()
-        # layout.addWidget(self.cam_label, alignment=Qt.AlignCenter)
         layout.addWidget(self.start_button, alignment=Qt.AlignCenter)
         self.setLayout(layout)
 
@@ -161,8 +158,6 @@ class CameraApp(QWidget):
         self.timer.start(100) #0.03초마다
         self.timer.timeout.connect(self.update_frame)
        
-        # self.flower_timer.start(500)  # 0.5초마다 생성
-
         self.skills = {
             "매력": 90,
             "신뢰도": 70,
@@ -171,10 +166,11 @@ class CameraApp(QWidget):
             "피지컬": 75, 
             "예술": 95,
         }
-       
+
+        self.skills3 = {}
 
         self.loading_label = QLabel(self)
-        self.movie = QMovie("loading.gif")
+        self.movie = QMovie("./resources/loading.gif")
         self.loading_label.setMovie(self.movie)
         self.movie.start()  # GIF 실행
 
@@ -191,7 +187,6 @@ class CameraApp(QWidget):
 
         self.loading_label.move(center_x, center_y)
         self.loading_label.hide()
-        # self.loading_label.show()
 
         # 캡처 모드 관련 변수
         self.capture_mode = False
@@ -200,25 +195,22 @@ class CameraApp(QWidget):
         self.countdown = 5
         self.countdown_timer = QTimer(self)
         self.countdown_timer.timeout.connect(self.update_countdown)
-        # self.FacePosition = {0,0,0,0}
         self.cropped_face = None
         self.line_color = 'white'
 
         self.greenCnt = 0
         self.redCnt = 0
-        self.still_countdown = False
-        self.last_still_countdown = False
+        self.calk_skills_once = False
+        
 
     def resetUI(self):
         """초기 상태로 되돌리기"""
         self.background_color = 'navy'
-        # self.setStyleSheet("background-color: #1E3A5F;")  # 남색 계열 배경
 
         self.reset_button.hide()
         self.finish_button.hide()
         self.cam_label.hide()
 
-        self.touch_button.hide()
         self.start_button.show()
 
         self.flower_timer.start(500)
@@ -227,8 +219,6 @@ class CameraApp(QWidget):
         self.capture_mode = False
         self.skills_mode = False
         self.face_detected = False
-        self.still_countdown = False
-        self.last_still_countdown = False
         self.countdown = 5
         self.greenCnt = 0
         self.redCnt = 0
@@ -240,20 +230,18 @@ class CameraApp(QWidget):
         """ 카메라 시작 """
         self.start_button.hide()
         self.cam_label.show()
-        self.touch_button.show()
         
         self.background_color = 'white'
         
         self.update()
 
-    def toggle_capture_mode(self):
-        """ 카메라 화면 터치 시 캡처 모드 토글 """
-        self.capture_mode = not self.capture_mode
-        if self.capture_mode:
-            # self.countdown = 5
-            self.countdown_timer.start(1000)
-        else:
-            self.countdown_timer.stop()
+    # def toggle_capture_mode(self):
+    #     """ 카메라 화면 터치 시 캡처 모드 토글 """
+    #     self.capture_mode = not self.capture_mode
+    #     if self.capture_mode:
+    #         self.countdown_timer.start(1000)
+    #     else:
+            # self.countdown_timer.stop()
 
     def update_countdown(self):
         """ 카운트다운 업데이트 """
@@ -261,14 +249,9 @@ class CameraApp(QWidget):
             self.countdown -= 1
         else:
             self.countdown_timer.stop()
-            # if self.face_detected:
-            #     self.cap.capture_face(self.cropped_face)
-            # else :
-            #     self.cap.capture_image()            
-            self.capture_mode = False
+            
             self.start_request()
             self.cam_label.hide()  # 카메라 화면 숨기기
-            self.touch_button.hide()  # 캡처 모드 버튼 숨기기
             self.background_color = 'pink'
         self.update()
 
@@ -276,51 +259,39 @@ class CameraApp(QWidget):
         """ 카메라 프레임 업데이트 및 배경 애니메이션 & 가이드라인 추가 """
         if self.background_color != 'pink' :
             ret, frame = self.cap.get_frame()
-            self.line_color = 'white'
             if ret:
                 tmp_x1,tmp_y1,tmp_x2,tmp_y2 = self.pro.detect_face(frame)
                 face_center_x = (tmp_x1 + tmp_x2)/2
                 face_center_y = (tmp_y1 + tmp_y2)/2
+                print(face_center_x,face_center_y)
+
                 # 640 x 480 size
                 if self.cam_label.isVisible() :
-                    if face_center_x > 150 and face_center_x <= 490 and face_center_y > 0 and face_center_y <= 350:
-                        self.face_detected = True
+                    if face_center_x > 250 and face_center_x <= 390 and face_center_y > 150 and face_center_y <= 330:
                         self.cropped_face = frame[tmp_y1:tmp_y2, tmp_x1:tmp_x2]
                         self.greenCnt += 1
-                        if self.redCnt > 0 :
-                            self.redCnt -= 1
-                        # self.redCnt = 0
-                        if not self.countdown_timer.isActive():
-                            self.countdown_timer.start(1000)
-                    else :
-                        self.redCnt += 1
-                        if self.greenCnt > 0 :
-                            self.greenCnt -= 1
-                        # self.countdown = 5
-                        if self.still_countdown == False :
-                            self.countdown_timer.stop()
+                        self.redCnt = 0
 
-                if self.greenCnt >= self.redCnt:
-                    self.line_color = 'green'
-                    if self.greenCnt >= 5 :
-                        self.still_countdown = True
-                        # self.cropped_face = frame[tmp_y1:tmp_y2, tmp_x1:tmp_x2]
-                        if self.last_still_countdown == False :
+                        #5연속시 캡처
+                        if self.greenCnt >= 10 :
+                            self.line_color = 'green'
                             self.cropped_face = cv2.cvtColor(self.cropped_face, cv2.COLOR_BGR2RGB)
                             self.cap.capture_face(self.cropped_face)
-                    if self.greenCnt >= 10 :
-                        self.greenCnt = 9
-                elif self.redCnt >  self.greenCnt:
-                    self.line_color = 'red'
-                    if self.redCnt >= 10 :
-                        self.redCnt = 9
-                else :
-                    self.line_color = 'white'
-                
-                if self.still_countdown and face_center_x == 0 and face_center_y == 0 :
-                    self.line_color = 'green'
+                            self.greenCnt = 0
+                            if not self.countdown_timer.isActive():
+                                self.countdown_timer.start(1000)
 
-                # print(tmp_x2,tmp_y2,tmp_x2,tmp_y2) 
+                        
+                    else :
+                        self.redCnt += 1
+                        self.greenCnt = 0
+
+                        if self.redCnt >= 10 :
+                            self.line_color = 'red'
+                            self.redCnt = 0
+                            if self.countdown_timer.isActive():
+                                self.countdown_timer.stop()
+                        
                 h, w, ch = frame.shape
                 bytes_per_line = ch * w
                 frame = cv2.resize(frame, (640, 480))
@@ -343,30 +314,30 @@ class CameraApp(QWidget):
                 path.closeSubpath()
 
                 # 검정색 테두리 그리기 (테두리 두께 12 → 2배)
-                painter.setPen(QPen(QColor(*colorList['black']), 12, Qt.SolidLine))
+                painter.setPen(QPen(colorList['black'], 12, Qt.SolidLine))
                 painter.drawPath(path)
-                self.line_color
+
                 # 흰색 경로 그리기 (원래 경로)
-                painter.setPen(QPen(QColor(*colorList[self.line_color]), 8, Qt.SolidLine))  # 선 두께 2배
+                painter.setPen(QPen(colorList[self.line_color], 8, Qt.SolidLine))  # 선 두께 2배
                 painter.drawPath(path)
 
                 # 머리 (타원형, 중앙 배치)
-                painter.setPen(QPen(QColor(*colorList['black']), 12, Qt.SolidLine))
+                painter.setPen(QPen(colorList['black'], 12, Qt.SolidLine))
                 painter.setBrush(Qt.transparent)  # 내부는 투명
                 painter.drawEllipse(QPointF(320, 190), 120, 140)  # 위치 조정 (기존 160, 100 → 320, 200)
 
                 # 원래 흰색 타원 그리기
-                painter.setPen(QPen(QColor(*colorList[self.line_color]), 8, Qt.SolidLine))  # 흰색 테두리, 두께 8
+                painter.setPen(QPen(colorList[self.line_color], 8, Qt.SolidLine))  # 흰색 테두리, 두께 8
                 painter.setBrush(Qt.transparent)  # 내부는 투명
                 painter.drawEllipse(QPointF(320, 190), 120, 140)  # 크기 및 위치 조정
 
-                if (self.capture_mode or self.still_countdown) and self.countdown > 0:
+                if (self.capture_mode or self.line_color == 'green') and self.countdown > 0:
                     countdown_text = str(self.countdown)
                     font = QFont("Consolas", 100, QFont.Bold)
                     painter.setFont(font)
                     
                     # 검정색 테두리 그리기
-                    painter.setPen(QColor(*colorList['black']))  # 검정색
+                    painter.setPen(colorList['black'])  # 검정색
                     painter.setBrush(Qt.transparent)  # 내부는 투명
 
                     # 텍스트 외부에 테두리 그리기 (텍스트가 겹치지 않도록 여러 방향으로 그려서 테두리 효과를 낸다)
@@ -376,36 +347,43 @@ class CameraApp(QWidget):
                     painter.drawText(w // 2 - 40 + 2, h // 2 + 20 + 2, countdown_text)  # 아래, 오른쪽
 
                     # 이제 원래 색으로 텍스트 그리기
-                    painter.setPen(QColor(*colorList['light_yellow']))  # 연노랑색
+                    painter.setPen(colorList['light_yellow'])  # 연노랑색
                     painter.drawText(w // 2 - 40, h // 2 + 20, countdown_text)
                 
                 # 테두리 추가 (검정색, 두께 6)
-                pen = QPen(QColor(*colorList['black']), 8, Qt.SolidLine)
+                pen = QPen(colorList['black'], 8, Qt.SolidLine)
                 painter.setPen(pen)
                 painter.drawRect(0, 0, w , h )
 
                 # 가이드라인 (흰색, 두께 4)
-                pen = QPen(QColor(*colorList[self.line_color]), 4, Qt.SolidLine)
+                pen = QPen(colorList[self.line_color], 4, Qt.SolidLine)
                 painter.setPen(pen)
 
                 painter.end()
                 self.cam_label.setPixmap(pixmap)
-
-            # 꽃 애니메이션 업데이트
-            # self.update_flowers()
-            self.last_still_countdown = self.still_countdown
             self.update()
 
     def update_careers(self):
         skills2= self.pro.classification_jpg()
-        # for i in range(6) :
-        self.skills["리더십"] = skills2[0] * 100
-        self.skills["매력"] = skills2[1] * 100
-        self.skills["신뢰도"] = skills2[2] * 100
-        self.skills["피지컬"] = skills2[3] * 100
-        self.skills["예술"] = skills2[4] * 100
-        self.skills["지능"] = skills2[5] * 100
-        # print(self.skills)
+        
+        print("skills2 : ",skills2)
+        skills2[0] += 0.05
+        skills2[1] -= 0.03
+        skills2[2] += 0.02
+        skills2[3] += 0.02
+        skills2[4] -= 0.12
+        skills2[5] += 0.06
+        print("skills2 : ",skills2)
+
+        for l, v in zip(["리더십", "매력", "신뢰도", "피지컬", "예술", "지능"], skills2):
+            # default_point = random.randint(40, 60)
+            self.skills[l] = min(v*450, 100)
+
+        print(self.skills)
+
+        # print(self.skills)for l, v in zip(["리더십", "매력", "신뢰도", "피지컬", "예술", "지능"], skills2):
+        # self.skills[l] = v * 100
+
         self.careers = {
             # 🎭 예술 & 창작 직군 (매력 & 예술 최우선, 신뢰도 & 피지컬 낮음)
             "🎭 배우, 모델, 인플루언서": self.skills["매력"] * 4.8 + self.skills["예술"] * 3.5 + self.skills["신뢰도"] * 1.0 + self.skills["리더십"] * 0.1 + self.skills["지능"] * 0.1 + self.skills["피지컬"] * 0.5,
@@ -432,32 +410,77 @@ class CameraApp(QWidget):
             "🛫 호텔리어, 승무원, 바텐더": self.skills["매력"] * 6.0 + self.skills["예술"] * 0.6 + self.skills["신뢰도"] * 1.5 + self.skills["리더십"] * 0.5 + self.skills["지능"] * 0.4 + self.skills["피지컬"] * 1.0,
         }
 
+        self.animal = {
+            # 🦁 리더십 & 피지컬이 강한 동물
+            "🐅 호랑이": self.skills["매력"] * 0.8 + self.skills["예술"] * 0.4 + self.skills["신뢰도"] * 1.2 + self.skills["리더십"] * 4.0 + self.skills["지능"] * 0.5 + self.skills["피지컬"] * 3.1,
+            "🦁 사자": self.skills["매력"] * 1.5 + self.skills["예술"] * 0.3 + self.skills["신뢰도"] * 2.0 + self.skills["리더십"] * 4.5 + self.skills["지능"] * 0.3 + self.skills["피지컬"] * 1.4,
+            "🐺 늑대": self.skills["매력"] * 1.2 + self.skills["예술"] * 0.4 + self.skills["신뢰도"] * 2.5 + self.skills["리더십"] * 3.5 + self.skills["지능"] * 1.0 + self.skills["피지컬"] * 1.4,
+
+            # 🦉 지능이 높은 동물 (인기 있는 동물로 변경)
+            "🦉 올빼미": self.skills["매력"] * 0.5 + self.skills["예술"] * 0.3 + self.skills["신뢰도"] * 1.5 + self.skills["리더십"] * 1.0 + self.skills["지능"] * 5.5 + self.skills["피지컬"] * 1.2,
+            "🐬 돌고래": self.skills["매력"] * 1.0 + self.skills["예술"] * 1.5 + self.skills["신뢰도"] * 1.0 + self.skills["리더십"] * 1.0 + self.skills["지능"] * 4.5 + self.skills["피지컬"] * 1.0,
+            "🐱 고양이": self.skills["매력"] * 3.5 + self.skills["예술"] * 1.0 + self.skills["신뢰도"] * 1.0 + self.skills["리더십"] * 0.5 + self.skills["지능"] * 3.0 + self.skills["피지컬"] * 1.0,
+
+            # 🦜 매력과 예술성이 높은 동물
+            "🦚 공작새": self.skills["매력"] * 5.0 + self.skills["예술"] * 4.5 + self.skills["신뢰도"] * 0.2 + self.skills["리더십"] * 0.1 + self.skills["지능"] * 0.1 + self.skills["피지컬"] * 0.1,
+            "🦜 앵무새": self.skills["매력"] * 4.5 + self.skills["예술"] * 3.5 + self.skills["신뢰도"] * 1.0 + self.skills["리더십"] * 0.5 + self.skills["지능"] * 0.5 + self.skills["피지컬"] * 0.0,
+            "🦋 나비": self.skills["매력"] * 6.0 + self.skills["예술"] * 3.0 + self.skills["신뢰도"] * 0.3 + self.skills["리더십"] * 0.2 + self.skills["지능"] * 0.3 + self.skills["피지컬"] * 0.2,
+
+            # 🐕 신뢰도가 높은 동물
+            "🐶 강아지": self.skills["매력"] * 2.5 + self.skills["예술"] * 0.5 + self.skills["신뢰도"] * 4.0 + self.skills["리더십"] * 1.0 + self.skills["지능"] * 1.5 + self.skills["피지컬"] * 0.5,
+            "🐘 코끼리": self.skills["매력"] * 0.5 + self.skills["예술"] * 0.2 + self.skills["신뢰도"] * 2.5 + self.skills["리더십"] * 1.5 + self.skills["지능"] * 1.8 + self.skills["피지컬"] * 3.5,
+            "🐴 말": self.skills["매력"] * 1.5 + self.skills["예술"] * 0.5 + self.skills["신뢰도"] * 4.5 + self.skills["리더십"] * 2.0 + self.skills["지능"] * 1.0 + self.skills["피지컬"] * 0.5,
+
+            # 🦅 피지컬이 뛰어난 동물
+            "🦅 독수리": self.skills["매력"] * 1.0 + self.skills["예술"] * 0.5 + self.skills["신뢰도"] * 2.0 + self.skills["리더십"] * 2.5 + self.skills["지능"] * 0.8 + self.skills["피지컬"] * 3.2,
+            "🐻 곰": self.skills["매력"] * 1.2 + self.skills["예술"] * 0.5 + self.skills["신뢰도"] * 2.0 + self.skills["리더십"] * 1.5 + self.skills["지능"] * 1.8 + self.skills["피지컬"] * 3.0,
+            "🐢 거북이": self.skills["매력"] * 1.0 + self.skills["예술"] * 0.2 + self.skills["신뢰도"] * 4.5 + self.skills["리더십"] * 1.5 + self.skills["지능"] * 1.5 + self.skills["피지컬"] * 1.3,
+
+            # 🌍 균형 잡힌 동물 (귀엽고 인기 많은 동물 포함)
+            "🐼 판다": self.skills["매력"] * 3.5 + self.skills["예술"] * 1.5 + self.skills["신뢰도"] * 2.0 + self.skills["리더십"] * 1.0 + self.skills["지능"] * 1.0 + self.skills["피지컬"] * 1.0,
+            "🦊 여우": self.skills["매력"] * 4.5 + self.skills["예술"] * 2.0 + self.skills["신뢰도"] * 0.0 + self.skills["리더십"] * 1.0 + self.skills["지능"] * 2.5 + self.skills["피지컬"] * 0.5,
+            "🐿️ 다람쥐": self.skills["매력"] * 3.0 + self.skills["예술"] * 2.5 + self.skills["신뢰도"] * 1.0 + self.skills["리더십"] * 0.5 + self.skills["지능"] * 2.5 + self.skills["피지컬"] * 0.5,
+        }
+
     def makeBox(self, painter):
         """ 능력치 차트 설명서 """
-        painter.setPen(QPen(QColor(*colorList['black']), 10, Qt.SolidLine))
+        painter.setPen(QPen(colorList['black'], 10, Qt.SolidLine))
         painter.drawRect(25, 25, 500, 550)
 
-        painter.setPen(QPen(QColor(*colorList['white']), 6, Qt.SolidLine))
+        painter.setPen(QPen(colorList['white'], 6, Qt.SolidLine))
         painter.drawRect(25, 25, 500, 550)
 
         # sorted_skills = sorted(self.skills.items(), key=lambda item: item[1], reverse=True)
-
-        self.update_careers()
+        if self.calk_skills_once:
+            self.update_careers()
+            self.calk_skills_once = False
+        # self.update_careers()
         
         sorted_careers = sorted(self.careers.items(), key=lambda x: x[1], reverse=True)
 
-        top1 = sorted_careers[0][0]  # 1순위 직업
-        top2 = sorted_careers[1][0]  # 2순위 직업
-        top3 = sorted_careers[2][0]  # 3순위 직업
+        top_careers1 = sorted_careers[0][0]  # 1순위 직업
+        top_careers2 = sorted_careers[1][0]  # 2순위 직업
+        top_careers3 = sorted_careers[2][0]  # 3순위 직업
 
-        text = f"🔥 추천 직업 🔥\n1st: {top1}\n2nd: {top2}\n3rd: {top3}"
+        # text = f"🔥 추천 직업 🔥\n1st: {top_careers1}\n2nd: {top_careers2}\n3rd: {top_careers3}\n\n"
+        # font = QFont("Consolas", 16, QFont.Bold)  # 폰트 설정
+        # painter.setFont(font)
+
+        # self.animal
+        sorted_animals = sorted(self.animal.items(), key=lambda x: x[1], reverse=True)
+
+        top_animals1 = sorted_animals[0][0]  # 1순위 직업
+        top_animals2 = sorted_animals[1][0]  # 2순위 직업
+        top_animals3 = sorted_animals[2][0]  # 3순위 직업
+
+        text = f"🔥 추천 직업 🔥\n1st: {top_careers1}\n2nd: {top_careers2}\n3rd: {top_careers3}\n\n 🔥 추천 동물 🔥\n1st: {top_animals1}\n2nd: {top_animals2}\n3rd: {top_animals3}"
         font = QFont("Consolas", 16, QFont.Bold)  # 폰트 설정
         painter.setFont(font)
 
         # 박스 내부에 텍스트를 중앙 정렬
         text_rect = QRect(25, 25, 500, 550)
         painter.setPen(QPen(QColor(*colorList['black']), 6, Qt.SolidLine))
-        painter.drawText(text_rect, Qt.AlignCenter, text)    
+        painter.drawText(text_rect, Qt.AlignCenter, text)  
 
     def create_flower(self,is_initial=False):
         """꽃을 생성하고 위치를 리스트에 추가"""
@@ -492,7 +515,6 @@ class CameraApp(QWidget):
             
             # 🌿 흔들림 (좌우 이동)
             x += math.sin(angle) * 4.0
-            # x += math.sin(angle) * random.uniform(-4.0, 4.0)
             angle += 0.05  # 흔들림 속도
             
             # 🌸 회전 (랜덤 속도로 회전)
@@ -511,7 +533,7 @@ class CameraApp(QWidget):
         """ 능력치 차트 그리기 """
         painter = QPainter(self)
         painter.setRenderHint(QPainter.Antialiasing)
-        painter.fillRect(self.rect(), QColor(*colorList[self.background_color]))  # 배경을 흰색으로 설정 
+        painter.fillRect(self.rect(), colorList[self.background_color])  # 배경을 흰색으로 설정 
         
         if self.cam_label.isVisible() or self.loading_label.isVisible():
             # 꽃내리는거 ON
@@ -519,7 +541,7 @@ class CameraApp(QWidget):
                 x, y, _, _, flower_size, rotation, _ = flower
 
                 # 🌸 꽃 이미지 로드
-                flower_pixmap = QPixmap("flower.png")  
+                flower_pixmap = QPixmap("./resources/flower.png")  
                 flower_pixmap = flower_pixmap.scaled(flower_size, flower_size, Qt.KeepAspectRatio, Qt.SmoothTransformation)
 
                 # 🎨 회전 적용
@@ -538,13 +560,10 @@ class CameraApp(QWidget):
             # 🎯 텍스트는 회전 없이 정상적으로 출력됨!
             if not self.loading_label.isVisible():
                 painter.setFont(QFont("Consolas", 25, QFont.Bold))  # 글꼴 크기            
-                painter.setPen(QColor(*colorList['black']))  
+                painter.setPen(colorList['black']) 
                 painter.drawText(220, 50, "🔼 상단의 카메라 렌즈를 바라봐주세요 🔼")
                 
-
-        # self.reset_button.show() # 항상 표시 (reset button 수정하기 위해서)
         if not self.cam_label.isVisible() and self.skills_mode:
-            # self.flower_timer.stop()
             self.countdown = 5
             hexagon_center_x = 770
             hexagon_center_y = 240
@@ -553,79 +572,18 @@ class CameraApp(QWidget):
             self.reset_button.show() # reset button 표시
             self.finish_button.show()
 
-            for i in range(6):
-                center = QPointF(hexagon_center_x, hexagon_center_y)  
-                radius = hexagon_radius*i/(6-1)
-                angles = [math.radians(60 * i) for i in range(6)]
-                hexagon_points = [
-                QPointF(center.x() + radius * math.cos(angle), center.y() + radius * math.sin(angle))
-                for angle in angles
-                ]
-                painter.setPen(QPen(QColor(*colorList['gray'], 200), 1))
-                painter.setBrush(Qt.NoBrush)
-                painter.drawPolygon(QPolygonF(hexagon_points))  # ✅ 리스트 전달
-            
+            self.chart = hexa.HexagonChart(hexagon_center_x, hexagon_center_y, hexagon_radius)
+            self.chart.draw_chart(painter)
+            self.chart.draw_results(painter, self.skills) 
 
-            # ⚡ 육각형 중심 및 반지름
-            center = QPointF(hexagon_center_x, hexagon_center_y)  
-            radius = hexagon_radius  
-            angles = [math.radians(60 * i) for i in range(6)]  
-
-            # ⚡ 육각형 꼭짓점 계산
-            hexagon_points = [
-                QPointF(center.x() + radius * math.cos(angle), center.y() + radius * math.sin(angle))
-                for angle in angles
-            ]
-
-            # ⚡ 능력치 값에 따른 내부 다각형 좌표 계산
-            skill_points = [
-                QPointF(
-                    center.x() + (radius * (self.skills[label] / 100) * math.cos(angle)),
-                    center.y() + (radius * (self.skills[label] / 100) * math.sin(angle))
-                )
-                for label, angle in zip(self.skills.keys(), angles)
-            ]
-
-            # ⚡ 육각형 외곽선 그리기
-            painter.setPen(QPen(QColor(*colorList['black']), 2))
-            painter.setBrush(Qt.NoBrush)
-            painter.drawPolygon(QPolygonF(hexagon_points))  # ✅ 리스트 전달
-
-            # ⚡ 능력치 내부 다각형 그리기 (반투명 색상)
-            painter.setPen(QPen(QColor(*colorList['dark_gray']), 2))
-            painter.setBrush(QBrush(QColor(*colorList['chart_skyblue'],130)))  # 반투명 파란색 채우기
-            painter.drawPolygon(QPolygonF(skill_points))  # ✅ 리스트 전달
-
-            # ⚡ 능력치 직선 연결
-            for point in hexagon_points:
-                # pen = QPen(QColor(255, 255, 255), 2)  # 흰색, 두께 2
-                painter.setPen(QColor(*colorList['white']))
-                painter.drawLine(center, point)
-
-            # ⚡ 능력치 항목 표시 (찌그러진 육각형 바깥)
-            center2 = QPointF(hexagon_center_x-25, hexagon_center_y+10)
-            radius2 = hexagon_radius+26
-            y_scale = 0.97
-
-            for i, label in enumerate(self.skills.keys()):
-                text_pos = QPointF(
-                    center2.x() + radius2 * math.cos(angles[i]),
-                    center2.y() + (radius2 * y_scale * math.sin(angles[i]))
-                )
-                painter.setPen(QColor(*colorList['black']))
-                painter.setFont(QFont("Consolas", 20, QFont.Bold))
-                painter.drawText(text_pos, label)
             painter.end()
     
     def closeEvent(self, event):
         """ 프로그램 종료 시 카메라 해제 """
-        if self.cap.isOpened():
-            self.cap.release()
+        self.cap.close()
         event.accept()
-        # sys.exit(app.exec_())
 
     def start_request(self):
-        # self.movie.start()
         self.loading_label.show()  # 로딩 메시지 표시
         
         # API 요청을 백그라운드에서 실행

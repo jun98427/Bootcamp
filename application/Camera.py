@@ -1,6 +1,6 @@
 import cv2
 
-class Camera() :
+class Camera :
     def __init__(self):
         self.cap = cv2.VideoCapture(0)
         self.cap.set(cv2.CAP_PROP_FRAME_WIDTH, 640)
@@ -15,7 +15,6 @@ class Camera() :
     def capture_face(self,cropped_face):
         """ 현재 프레임을 캡처하여 저장 """
         cropped_face = cv2.cvtColor(cropped_face, cv2.COLOR_BGR2RGB)
-        # if ret:
         cv2.imwrite("captured_frame.jpg", cropped_face)
         # ret, frame = self.cap.read()
         # if ret:
