@@ -222,6 +222,7 @@ class CameraApp(QWidget):
         self.countdown = 5
         self.greenCnt = 0
         self.redCnt = 0
+        self.calk_skills_once = False
         self.cropped_face = None
         self.line_color = 'white'
         self.update()
@@ -249,7 +250,7 @@ class CameraApp(QWidget):
             self.countdown -= 1
         else:
             self.countdown_timer.stop()
-            
+            self.calk_skills_once = True
             self.start_request()
             self.cam_label.hide()  # 카메라 화면 숨기기
             self.background_color = 'pink'
@@ -454,7 +455,6 @@ class CameraApp(QWidget):
         if self.calk_skills_once:
             self.update_careers()
             self.calk_skills_once = False
-        # self.update_careers()
         
         sorted_careers = sorted(self.careers.items(), key=lambda x: x[1], reverse=True)
 
@@ -479,7 +479,7 @@ class CameraApp(QWidget):
 
         # 박스 내부에 텍스트를 중앙 정렬
         text_rect = QRect(25, 25, 500, 550)
-        painter.setPen(QPen(QColor(*colorList['black']), 6, Qt.SolidLine))
+        painter.setPen(QPen(colorList['black'], 6, Qt.SolidLine))
         painter.drawText(text_rect, Qt.AlignCenter, text)  
 
     def create_flower(self,is_initial=False):
