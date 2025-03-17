@@ -1,6 +1,6 @@
 from PyQt5.QtWidgets import QApplication, QLabel, QPushButton, QWidget, QVBoxLayout
-from PyQt5.QtGui import QImage, QPixmap, QPainter, QPen, QColor, QPainterPath, QFont, QMovie, QTransform
-from PyQt5.QtCore import Qt, QTimer, QPointF, QRect
+from PyQt5.QtGui import QImage, QPixmap, QPainter, QPen, QColor, QPainterPath, QFont, QMovie, QTransform, QTextDocument
+from PyQt5.QtCore import Qt, QTimer, QPointF, QRect, QRectF
 import math
 import Camera as cap
 import Processing as pro
@@ -78,7 +78,7 @@ class CameraApp(QWidget):
             }
         """)
         self.start_button.setGeometry(512, 400, 180, 100)
-        self.start_button.clicked.connect(lambda:self.start_camera("job"))
+        self.start_button.clicked.connect(lambda:self.start_camera("result_info"))
 
         self.start_button.show()
  
@@ -171,6 +171,25 @@ class CameraApp(QWidget):
         self.reset_button.clicked.connect(self.resetUI)
         self.reset_button.hide()
 
+        self.result_info_button = QPushButton("설명보기", self)
+        self.result_info_button.setStyleSheet("""
+            QPushButton {
+                font-size: 20px;
+                font-weight: bold;
+                color: black;
+                background-color: rgba(70, 220, 200, 220);
+                border-radius: 25px;
+                padding: 15 10px;
+                border: 2px solid black;
+            }
+            QPushButton:hover {
+                background-color: rgba(40, 150, 160, 250);
+            }
+        """)
+        self.result_info_button.setGeometry(620, 500, 120, 60)
+        self.result_info_button.clicked.connect(lambda: self.re_game("result_info"))
+        self.result_info_button.hide()
+
         self.setCursor(Qt.BlankCursor)
 
         # 꽃 애니메이션 타이머 (모든 꽃을 움직이게 함)
@@ -241,11 +260,16 @@ class CameraApp(QWidget):
         self.capture_data = False
         self.result_type = None
 
+        self.image_label = QLabel(self)
+        self.image_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.image_label.setFont(QFont("Arial", 50))  # 글자 크기 키우기
+
     def re_game(self, button_type):
         """다른 게임 선택하기 (세미 초기화)"""
         self.result_type = button_type
  
         self.reset_button.show()
+        self.result_info_button.show()
         self.cam_label.hide()
  
         self.start_button.hide()
@@ -265,6 +289,7 @@ class CameraApp(QWidget):
         self.background_color = 'navy'
 
         self.reset_button.hide()
+        self.result_info_button.hide()
         self.cam_label.hide()
 
         self.start_button.show()
@@ -429,30 +454,52 @@ class CameraApp(QWidget):
     def makeBox(self, painter):
         """ 능력치 차트 설명서 """
         painter.setPen(QPen(colorList['black'], 10, Qt.SolidLine))
-        painter.drawRect(25, 25, 500, 550)
+        painter.drawRect(25, 25, 520, 550)
 
         painter.setPen(QPen(colorList['white'], 6, Qt.SolidLine))
-        painter.drawRect(25, 25, 500, 550)
+        painter.drawRect(25, 25, 520, 550)
 
         if self.calk_skills_once:
             inf = infer.Inference(self.pro.classification_jpg())
-            self.careers, self.animals = inf.infer_careers()
+            self.careers, self.animals, self.result_info = inf.infer_careers()
             self.calk_skills_once = False
 
         font = QFont("Consolas", 16, QFont.Bold)  # 폰트 설정
         painter.setFont(font)
+        text_rect = QRect(25, 5, 520, 550)
+        painter.setPen(QPen(colorList['black'], 6, Qt.SolidLine))
 
         if self.result_type == "job":
             text = f"🔥 추천 직업 🔥\n1st: {self.careers[0]}\n2nd: {self.careers[1]}\n3rd: {self.careers[2]}\n\n"
+            painter.drawText(text_rect, Qt.AlignCenter, text)
         elif self.result_type == "animal":
             text = f"🔥 추천 동물 🔥\n1st: {self.animals[0]}\n2nd: {self.animals[1]}\n3rd: {self.animals[2]}\n\n"
+            painter.drawText(text_rect, Qt.AlignCenter, text)
         elif self.result_type == "temp":
             text = f"임시버튼입니다."
+            painter.drawText(text_rect, Qt.AlignCenter, text)
+        elif self.result_type == "result_info":
+            # text = self.result_info
+            font = QFont("Consolas", 14)  # 폰트 설정
+            painter.setFont(font)
+            painter.setFont(font)  # 기존 폰트 유지
 
-        # 박스 내부에 텍스트를 중앙 정렬
-        text_rect = QRect(25, 25, 500, 550)
-        painter.setPen(QPen(colorList['black'], 6, Qt.SolidLine))
-        painter.drawText(text_rect, Qt.AlignCenter, text)  
+            text_rect = QRectF(25, 25, 500, 550)  # 전체 텍스트 영역
+
+            # ✅ QTextDocument 사용 (HTML 렌더링 가능)
+            doc = QTextDocument()
+            doc.setDefaultFont(font)
+            doc.setHtml(self.result_info)
+
+            # ✅ 세로 중앙 정렬
+            total_text_height = doc.size().height()
+            y_offset = -20 + text_rect.top() + (text_rect.height() - total_text_height) / 2
+
+            # ✅ 텍스트 출력
+            painter.save()
+            painter.translate(text_rect.left()+10, y_offset)
+            doc.drawContents(painter)
+            painter.restore()
 
     def create_flower(self,is_initial=False):
         """꽃을 생성하고 위치를 리스트에 추가"""
@@ -505,7 +552,8 @@ class CameraApp(QWidget):
         """ 능력치 차트 그리기 """
         painter = QPainter(self)
         painter.setRenderHint(QPainter.Antialiasing)
-        painter.fillRect(self.rect(), colorList[self.background_color])  # 배경을 흰색으로 설정 
+        painter.fillRect(self.rect(), colorList[self.background_color])  # 배경을 흰색으로 설정
+        self.image_label.hide()
         
         if self.flower_state and (self.cam_label.isVisible() or self.loading_label.isVisible()):
             # 꽃내리는거 ON
@@ -533,23 +581,43 @@ class CameraApp(QWidget):
             if not self.loading_label.isVisible():
                 painter.setFont(QFont("Consolas", 25, QFont.Bold))  # 글꼴 크기            
                 painter.setPen(colorList['black']) 
-                painter.drawText(220, 50, "🔼 상단의 카메라 렌즈를 바라봐주세요 🔼")
+                painter.drawText(220, 50, "↑↑상단의 카메라 렌즈를 바라봐주세요 ↑↑")
+                # painter.drawText(220, 50, " 상단의 카메라 렌즈를 바라봐주세요 🔼")
                 
         if not self.cam_label.isVisible() and self.skills_mode:
             self.flower_state = False
             self.countdown = 2
-            hexagon_center_x = 770
-            hexagon_center_y = 240
-            hexagon_radius = 160
+            
             self.makeBox(painter)
             self.reset_button.show() # reset button 표시
+            self.result_info_button.show()
             self.job_button.show()
             self.animal_button.show()
             self.temp_button.show()
+            self.image_label.setGeometry(678, 140, 200, 200)  # (x, y, width, height)
 
-            self.chart = hexa.HexagonChart(hexagon_center_x, hexagon_center_y, hexagon_radius)
-            self.chart.draw_chart(painter)
-            self.chart.draw_results(painter, self.skills) 
+            if self.result_type == "job":
+                emoji = self.careers[0].split()[0]
+                self.image_label.setText(f"<h1>{emoji}</h1>")
+                self.image_label.setAlignment(Qt.AlignCenter)  # 중앙 정렬
+                self.image_label.show()
+            elif self.result_type == "animal":
+                emoji = self.animals[0].split()[0]
+                self.image_label.setText(f"<h1>{emoji}</h1>")
+                self.image_label.setAlignment(Qt.AlignCenter)  # 중앙 정렬
+                self.image_label.show()
+            # elif self.result_type == "temp":
+                # 그림그리기
+                # text = f"임시버튼입니다."
+                # painter.drawText(text_rect, Qt.AlignCenter, text)
+            elif self.result_type == "result_info":
+                # self.image_label.hide()
+                hexagon_center_x = 770
+                hexagon_center_y = 240
+                hexagon_radius = 160
+                self.chart = hexa.HexagonChart(hexagon_center_x, hexagon_center_y, hexagon_radius)
+                self.chart.draw_chart(painter)
+                self.chart.draw_results(painter, self.skills) 
 
             painter.end()
     

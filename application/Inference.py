@@ -7,6 +7,18 @@ class Inference:
         skills[4] -= 0.12
         skills[5] += 0.06
         self.skills= {}
+        
+        self.result_info = """
+                <style>
+                    p { line-height: 140%; }  /* 🔹 줄 간격 140% 설정 */
+                </style>
+                <p><b>피지컬:</b> 신체적 능력과 활동적인 역량</p>
+                <p><b>예술:</b> 창의적 감각과 표현력을 바탕으로 한 미적 감성</p>
+                <p><b>매력:</b> 사람을 끌어당기는 호감과 사회적 영향력</p>
+                <p><b>신뢰도:</b> 믿음을 주고 신뢰를 형성하는 안정적인 성향</p>
+                <p><b>리더십:</b> 조직을 이끌고 조율하는 능력과 지도력</p>
+                <p><b>지능:</b> 논리적 사고와 문제 해결 능력을 포함한 인지적 역량</p>
+                """
 
         for l, v in zip(["리더십", "매력", "신뢰도", "피지컬", "예술", "지능"], skills):
             # default_point = random.randint(40, 60)
@@ -83,5 +95,5 @@ class Inference:
             careers.append(sorted_careers[i][0])
             animals.append(sorted_animals[i][0])
 
-        return careers, animals  
+        return careers, animals, self.result_info
 
