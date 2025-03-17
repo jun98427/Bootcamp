@@ -1,6 +1,6 @@
 from PyQt5.QtWidgets import QApplication, QLabel, QPushButton, QWidget, QVBoxLayout
 from PyQt5.QtGui import QImage, QPixmap, QPainter, QPen, QColor, QPainterPath, QFont, QMovie, QTransform, QTextDocument
-from PyQt5.QtCore import Qt, QTimer, QPointF, QRect, QRectF
+from PyQt5.QtCore import Qt, QTimer, QPointF, QRect, QRectF, QFile, QTextStream
 import math
 import Camera as cap
 import Processing as pro
@@ -44,6 +44,8 @@ class CameraApp(QWidget):
 
         self.showFullScreen()  # 전체 화면으로 전환
 
+        self.load_stylesheet()
+
         # 카메라 설정
         self.cap = cap.Camera()
         self.pro = pro.Processing()
@@ -59,133 +61,39 @@ class CameraApp(QWidget):
         self.actual_width = 1024
 
         self.start_button = QPushButton("✨ 시작하기 ✨", self)
-        self.start_button.setStyleSheet("""
-            QPushButton {
-                font-size: 45px;
-                font-weight: bold;
-                color: white;
-                background-color: rgba(50, 130, 200, 220);
-                border-radius: 25px;
-                padding: 30px 60px;
-                border: 2px solid white;
-                outline: none; /* 포커스 박스 제거 */
-            }
-            QPushButton:hover {
-                background-color: rgba(30, 100, 170, 250);
-            }
-            QPushButton:focus {
-                outline: none; /* 포커스 효과 제거 */
-            }
-        """)
+        self.start_button.setObjectName('start')
         self.start_button.setGeometry(512, 400, 180, 100)
         self.start_button.clicked.connect(lambda:self.start_camera("result_info"))
 
         self.start_button.show()
  
         self.job_button = QPushButton("추천 직업", self)
-        self.job_button.setStyleSheet("""
-            QPushButton {
-                font-size: 20px;
-                font-weight: bold;
-                color: white;
-                background-color: rgba(50, 130, 200, 220);
-                border-radius: 25px;
-                padding: 15px 10px;
-                border: 2px solid white;
-                outline: none; /* 포커스 박스 제거 */
-            }
-            QPushButton:hover {
-                background-color: rgba(30, 100, 170, 250);
-            }
-            QPushButton:focus {
-                outline: none; /* 포커스 효과 제거 */
-            }
-        """)
+        self.job_button.setObjectName('result')
         self.job_button.setGeometry(520, 500, 120, 60)
         self.job_button.clicked.connect(lambda: self.re_game("job"))
         self.job_button.hide()
  
         self.animal_button = QPushButton("닮은 동물", self)
-        self.animal_button.setStyleSheet("""
-            QPushButton {
-                font-size: 20px;
-                font-weight: bold;
-                color: white;
-                background-color: rgba(50, 130, 200, 220);
-                border-radius: 25px;
-                padding: 15px 10px;
-                border: 2px solid white;
-                outline: none; /* 포커스 박스 제거 */
-            }
-            QPushButton:hover {
-                background-color: rgba(30, 100, 170, 250);
-            }
-            QPushButton:focus {
-                outline: none; /* 포커스 효과 제거 */
-            }
-        """)
+        self.animal_button.setObjectName('result')
         self.animal_button.setGeometry(680, 500, 120, 60)
         self.animal_button.clicked.connect(lambda: self.re_game("animal"))
         self.animal_button.hide()
  
         self.temp_button = QPushButton("임시 버튼", self)
-        self.temp_button.setStyleSheet("""
-            QPushButton {
-                font-size: 20px;
-                font-weight: bold;
-                color: white;
-                background-color: rgba(50, 130, 200, 220);
-                border-radius: 25px;
-                padding: 15px 10px;
-                border: 2px solid white;
-                outline: none; /* 포커스 박스 제거 */
-            }
-            QPushButton:hover {
-                background-color: rgba(30, 100, 170, 250);
-            }
-            QPushButton:focus {
-                outline: none; /* 포커스 효과 제거 */
-            }
-        """)
+        self.temp_button.setObjectName('result')
         self.temp_button.setGeometry(840, 500, 120, 60)
         self.temp_button.clicked.connect(lambda: self.re_game("temp"))
         self.temp_button.hide()
 
          # ▶ "초기화" 버튼 추가
         self.reset_button = QPushButton("처음으로", self)
-        self.reset_button.setStyleSheet("""
-            QPushButton {
-                font-size: 20px;
-                font-weight: bold;
-                color: black;
-                background-color: rgba(70, 220, 200, 220);
-                border-radius: 25px;
-                padding: 15 10px;
-                border: 2px solid black;
-            }
-            QPushButton:hover {
-                background-color: rgba(40, 150, 160, 250);
-            }
-        """)
+        self.reset_button.setObjectName('operation')
         self.reset_button.setGeometry(80, 500, 120, 60)
         self.reset_button.clicked.connect(self.resetUI)
         self.reset_button.hide()
 
         self.result_info_button = QPushButton("설명보기", self)
-        self.result_info_button.setStyleSheet("""
-            QPushButton {
-                font-size: 20px;
-                font-weight: bold;
-                color: black;
-                background-color: rgba(70, 220, 200, 220);
-                border-radius: 25px;
-                padding: 15 10px;
-                border: 2px solid black;
-            }
-            QPushButton:hover {
-                background-color: rgba(40, 150, 160, 250);
-            }
-        """)
+        self.result_info_button.setObjectName('operation')
         self.result_info_button.setGeometry(280, 500, 120, 60)
         self.result_info_button.clicked.connect(lambda: self.re_game("result_info"))
         self.result_info_button.hide()
@@ -643,6 +551,14 @@ class CameraApp(QWidget):
         #     self.result_label.setText(f"에러 발생: {data['error']}")
         # else:
         #     self.skills = data
+
+    def load_stylesheet(self):
+        # stylesheet.qss 파일 로드
+        qss_file = QFile('/home/willtek/Bootcamp/application/stylesheet/stylesheet.qss')
+        qss_file.open(QFile.ReadOnly | QFile.Text)
+        qss_stream = QTextStream(qss_file)
+        self.setStyleSheet(qss_stream.readAll())
+        qss_file.close()
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)

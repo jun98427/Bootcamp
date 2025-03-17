@@ -1,0 +1,50 @@
+QPushButton#start {
+    font-size: 45px;
+    font-weight: bold;
+    color: white;
+    background-color: rgba(50, 130, 200, 220);
+    border-radius: 25px;
+    padding: 30px 60px;
+    border: 2px solid white;
+    outline: none; /* 포커스 박스 제거 */
+}
+
+QPushButton#start:hover {
+    background-color: rgba(30, 100, 170, 250);
+}
+
+QPushButton#focus {
+    outline: non;
+}
+
+QPushButton#result {
+    font-size: 20px;
+    font-weight: bold;
+    color: white;
+    background-color: rgba(50, 130, 200, 220);
+    border-radius: 25px;
+    padding: 15px 10px;
+    border: 2px solid white;
+    outline: none; /* 포커스 박스 제거 */
+}
+
+QPushButton#result:hover {
+    background-color: rgba(30, 100, 170, 250);
+}
+
+QPushButton#result:focus {
+    outline: none; /* 포커스 효과 제거 */
+}
+
+QPushButton#operation{
+    font-size: 20px;
+    font-weight: bold;
+    color: black;
+    background-color: rgba(70, 220, 200, 220);
+    border-radius: 25px;
+    padding: 15 10px;
+    border: 2px solid black;
+}
+QPushButton#operation:hover {
+    background-color: rgba(40, 150, 160, 250);
+}
