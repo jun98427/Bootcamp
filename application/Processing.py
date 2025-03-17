@@ -45,7 +45,7 @@ class Processing :
     
     # 캡쳐된 jpg 파일을 받아서 classification 하고 6개짜리 리스트를 출력
     def classification_jpg(self):
-        jpg_file = cv2.imread("captured_frame.jpg")
+        jpg_file = cv2.imread("/home/willtek/Bootcamp/application/captured_frame.jpg")
         if jpg_file is None:
             print("이미지를 불러오지 못했습니다. 파일 경로를 확인하세요!")
         else:
