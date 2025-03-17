@@ -11,6 +11,9 @@ import numpy as np
 import random
 import HexagonChart as hexa
 import Inference as infer
+import os
+
+delete_jpg_file = "/home/willtek/Bootcamp/application/captured_frame.jpg"
 
 colorList = {
     'red': QColor(255, 0, 0),
@@ -170,7 +173,8 @@ class CameraApp(QWidget):
 
         self.image_label = QLabel(self)
         self.image_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        self.image_label.setFont(QFont("Arial", 50))  # 글자 크기 키우기
+        self.image_label.setFont(QFont("Arial", 70))  # 글자 크기 키우기
+        self.image_label.setGeometry(90, 90, 300, 300)  # (x, y, width, height)
 
     def re_game(self, button_type):
         """다른 게임 선택하기 (세미 초기화)"""
@@ -219,6 +223,13 @@ class CameraApp(QWidget):
         self.capture_data = False
         self.result_type = None
         self.flower_state = True
+
+        if os.path.exists(delete_jpg_file):  # 파일이 존재하는지 확인
+            os.remove(delete_jpg_file)  # 파일 삭제
+            print(f"{delete_jpg_file} 삭제 완료!")
+        else:
+            print("파일이 존재하지 않습니다.")
+
         self.update()
 
     def start_camera(self, button_type):
@@ -260,7 +271,7 @@ class CameraApp(QWidget):
                 tmp_x1,tmp_y1,tmp_x2,tmp_y2 = self.pro.detect_face(frame)
                 face_center_x = (tmp_x1 + tmp_x2)/2
                 face_center_y = (tmp_y1 + tmp_y2)/2
-                print(face_center_x,face_center_y)
+                # print(face_center_x,face_center_y)
 
                 # 640 x 480 size
                 if self.cam_label.isVisible() :
@@ -379,10 +390,10 @@ class CameraApp(QWidget):
         painter.setPen(QPen(colorList['black'], 6, Qt.SolidLine))
 
         if self.result_type == "job":
-            text = f"🔥 추천 직업 🔥\n1st: {self.careers[0]}\n2nd: {self.careers[1]}\n3rd: {self.careers[2]}\n\n"
+            text = f"🔥 추천 직업 🔥\n\n1st 🥇 : {self.careers[0].split(maxsplit=1)[-1]}\n2nd 🥈 : {self.careers[1].split(maxsplit=1)[-1]}\n3rd 🥉 : {self.careers[2].split(maxsplit=1)[-1]}\n\n"
             painter.drawText(text_rect, Qt.AlignCenter, text)
         elif self.result_type == "animal":
-            text = f"🔥 추천 동물 🔥\n1st: {self.animals[0]}\n2nd: {self.animals[1]}\n3rd: {self.animals[2]}\n\n"
+            text = f"나와 비슷한 동물\n\n1st 🥇 : {self.animals[0].split()[1]}\n2nd 🥈 : {self.animals[1].split()[1]}\n3rd 🥉 : {self.animals[2].split()[1]}\n\n"
             painter.drawText(text_rect, Qt.AlignCenter, text)
         elif self.result_type == "temp":
             text = f"임시버튼입니다."
@@ -503,7 +514,6 @@ class CameraApp(QWidget):
             self.job_button.show()
             self.animal_button.show()
             self.temp_button.show()
-            self.image_label.setGeometry(156, 140, 200, 200)  # (x, y, width, height)
 
             if self.result_type == "job":
                 emoji = self.careers[0].split()[0]
