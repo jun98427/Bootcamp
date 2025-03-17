@@ -28,6 +28,39 @@ class Inference:
                 <p><b>리더십:</b> 조직을 이끌고 조율하는 능력과 지도력</p>
                 <p><b>지능:</b> 논리적 사고와 문제 해결 능력을 포함한 인지적 역량</p>
                 """
+        self.careers_info = """
+                    <style>
+                        p {{ 
+                            line-height: 140%;
+                            text-align: center;
+                        }}
+                        .title {{ font-size: 26px; }}  /* 🥇 금메달 */
+                        .gold {{ font-size: 24px; }}  /* 🥇 금메달 */
+                        .silver {{ font-size: 20px; }} /* 🥈 은메달 */
+                        .bronze {{ font-size: 18px; }} /* 🥉 동메달 */
+                    </style>
+                    <p class="title"><b>🔥 추천 직업 🔥</b></p>
+                    <p class="gold">🥇 <b>{}점 : {}</b></p>
+                    <p class="silver">🥈 <b>{}점 </b>: {}</p>
+                    <p class="bronze">🥉 <b>{}점 </b>: {}</p>
+                """
+        
+        self.animals_info = """
+                    <style>
+                        p {{ 
+                            line-height: 140%;
+                            text-align: center;
+                        }}
+                        .title {{ font-size: 26px; }}  /* 🥇 금메달 */
+                        .gold {{ font-size: 24px; }}  /* 🥇 금메달 */
+                        .silver {{ font-size: 20px; }} /* 🥈 은메달 */
+                        .bronze {{ font-size: 18px; }} /* 🥉 동메달 */
+                    </style>
+                    <p class="title"><b>나와 닮은 동물</b></p>
+                    <p class="gold">🥇 <b>{}점 : {}</b></p>
+                    <p class="silver">🥈 <b>{}점 </b>: {}</p>
+                    <p class="bronze">🥉 <b>{}점 </b>: {}</p>
+                """
 
         for l, v in zip(["리더십", "매력", "신뢰도", "피지컬", "예술", "지능"], skills):
             # default_point = random.randint(40, 60)
@@ -96,7 +129,8 @@ class Inference:
         self.calc_values()
         sorted_careers = sorted(self.careers.items(), key=lambda x: x[1], reverse=True)
         sorted_animals = sorted(self.animal.items(), key=lambda x: x[1], reverse=True)
-
+        careers_scores = [career[1]/10 for career in sorted_careers]
+        animals_scores = [animals[1]/10 for animals in sorted_animals]
         careers = []
         animals = []
 
@@ -104,5 +138,5 @@ class Inference:
             careers.append(sorted_careers[i][0])
             animals.append(sorted_animals[i][0])
 
-        return careers, animals, self.result_info
+        return careers, animals, careers_scores, animals_scores, self.result_info, self.careers_info, self.animals_info
 

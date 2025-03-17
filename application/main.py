@@ -1,5 +1,5 @@
 from PyQt5.QtWidgets import QApplication, QLabel, QPushButton, QWidget, QVBoxLayout
-from PyQt5.QtGui import QImage, QPixmap, QPainter, QPen, QColor, QPainterPath, QFont, QMovie, QTransform, QTextDocument
+from PyQt5.QtGui import QImage, QPixmap, QPainter, QPen, QColor, QPainterPath, QFont, QMovie, QTransform, QTextDocument, QTextOption
 from PyQt5.QtCore import Qt, QTimer, QPointF, QRect, QRectF, QFile, QTextStream
 import math
 import Camera as cap
@@ -381,20 +381,56 @@ class CameraApp(QWidget):
         if self.calk_skills_once:
             inf = infer.Inference(self.pro.classification_jpg())
             self.skills = inf.inf_skills      
-            self.careers, self.animals, self.result_info = inf.infer_careers()
+            self.careers, self.animals, self.careers_scores, self.animals_scores, self.result_info, self.careers_info, self.animals_info = inf.infer_careers()
             self.calk_skills_once = False
 
         font = QFont("Consolas", 16, QFont.Bold)  # 폰트 설정
         painter.setFont(font)
         text_rect = QRect(479, 5, 520, 550)
         painter.setPen(QPen(colorList['black'], 6, Qt.SolidLine))
-
         if self.result_type == "job":
-            text = f"🔥 추천 직업 🔥\n\n1st 🥇 : {self.careers[0].split(maxsplit=1)[-1]}\n2nd 🥈 : {self.careers[1].split(maxsplit=1)[-1]}\n3rd 🥉 : {self.careers[2].split(maxsplit=1)[-1]}\n\n"
-            painter.drawText(text_rect, Qt.AlignCenter, text)
+            formatted_text = self.careers_info.format(
+                int(self.careers_scores[0]), self.careers[0].split(maxsplit=1)[-1],
+                int(self.careers_scores[1]), self.careers[1].split(maxsplit=1)[-1],
+                int(self.careers_scores[2]), self.careers[2].split(maxsplit=1)[-1]
+            )
+
+            # ✅ QTextDocument 사용 (HTML 렌더링 가능)
+            doc = QTextDocument()
+            doc.setHtml(formatted_text)  # ✅ HTML 적용 (가로 정렬 포함)
+            doc.setTextWidth(text_rect.width())  
+
+            # ✅ 세로 중앙 정렬
+            total_text_height = doc.size().height()
+            y_offset = text_rect.top() + (text_rect.height() - total_text_height) / 2
+
+            # ✅ 텍스트 출력
+            painter.save()
+            painter.translate(text_rect.left(), y_offset)  # ✅ x 좌표 조정 (10 제거)
+            doc.drawContents(painter)  # HTML 기반으로 출력
+            painter.restore()
+
         elif self.result_type == "animal":
-            text = f"나와 비슷한 동물\n\n1st 🥇 : {self.animals[0].split()[1]}\n2nd 🥈 : {self.animals[1].split()[1]}\n3rd 🥉 : {self.animals[2].split()[1]}\n\n"
-            painter.drawText(text_rect, Qt.AlignCenter, text)
+            formatted_text = self.animals_info.format(
+                int(self.animals_scores[0]), self.animals[0].split(maxsplit=1)[-1],
+                int(self.animals_scores[1]), self.animals[1].split(maxsplit=1)[-1],
+                int(self.animals_scores[2]), self.animals[2].split(maxsplit=1)[-1]
+            )
+
+            # ✅ QTextDocument 사용 (HTML 렌더링 가능)
+            doc = QTextDocument()
+            doc.setHtml(formatted_text)  # ✅ HTML 적용 (가로 정렬 포함)
+            doc.setTextWidth(text_rect.width())  
+
+            # ✅ 세로 중앙 정렬
+            total_text_height = doc.size().height()
+            y_offset = text_rect.top() + (text_rect.height() - total_text_height) / 2
+
+            # ✅ 텍스트 출력
+            painter.save()
+            painter.translate(text_rect.left(), y_offset)  # ✅ x 좌표 조정 (10 제거)
+            doc.drawContents(painter)  # HTML 기반으로 출력
+            painter.restore()
         elif self.result_type == "temp":
             text = f"임시버튼입니다."
             painter.drawText(text_rect, Qt.AlignCenter, text)
