@@ -33,14 +33,23 @@ class Processing :
                 self.cropped_face = frame[y1:y2, x1:x2]
         return x1, y1, x2, y2
 
+    def softmax_with_temperature(self, logits, temperature=1.0):
+
+        logits = np.array(logits)
+
+        scaled_logits = logits / temperature
+
+        exp_values = np.exp(scaled_logits - np.max(scaled_logits))
+
+        return exp_values / np.sum(exp_values)
     
     # 캡쳐된 jpg 파일을 받아서 classification 하고 6개짜리 리스트를 출력
     def classification_jpg(self):
         jpg_file = cv2.imread("captured_frame.jpg")
         if jpg_file is None:
             print("이미지를 불러오지 못했습니다. 파일 경로를 확인하세요!")
-        # else:
-        #     print("이미지 로드 성공!")
+        else:
+            print("이미지 로드 성공!")
         if not np.array_equal(jpg_file, self.last_jpg_file):
             # cv2.imread("captured_frame.jpg", jpg_file)
             self.result_list = [-1,-1,-1,-1,-1,-1]
@@ -54,9 +63,11 @@ class Processing :
             cropped_face_ncnn.substract_mean_normalize(mean_vals, norm_vals)
             # NCNN input
             ex.input("in0", cropped_face_ncnn)
-            # ret : 가장 높은값, self.result_list : 확률 list
-            ret, self.result_list = ex.extract("out0")
-            # output_np = np.array(output)    # probability result
-            # print(output_np)
+
+            ret, output = ex.extract("out1")
+            output_np = np.array(output)
+            temperature = 3.5
+            output = self.softmax_with_temperature(output_np, temperature)
+            
             self.last_jpg_file = jpg_file
-        return self.result_list
+        return output

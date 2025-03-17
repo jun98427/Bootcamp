@@ -101,7 +101,7 @@ class CameraApp(QWidget):
                 outline: none; /* 포커스 효과 제거 */
             }
         """)
-        self.job_button.setGeometry(60, 500, 120, 60)
+        self.job_button.setGeometry(520, 500, 120, 60)
         self.job_button.clicked.connect(lambda: self.re_game("job"))
         self.job_button.hide()
  
@@ -124,7 +124,7 @@ class CameraApp(QWidget):
                 outline: none; /* 포커스 효과 제거 */
             }
         """)
-        self.animal_button.setGeometry(220, 500, 120, 60)
+        self.animal_button.setGeometry(680, 500, 120, 60)
         self.animal_button.clicked.connect(lambda: self.re_game("animal"))
         self.animal_button.hide()
  
@@ -147,7 +147,7 @@ class CameraApp(QWidget):
                 outline: none; /* 포커스 효과 제거 */
             }
         """)
-        self.temp_button.setGeometry(380, 500, 120, 60)
+        self.temp_button.setGeometry(840, 500, 120, 60)
         self.temp_button.clicked.connect(lambda: self.re_game("temp"))
         self.temp_button.hide()
 
@@ -167,7 +167,7 @@ class CameraApp(QWidget):
                 background-color: rgba(40, 150, 160, 250);
             }
         """)
-        self.reset_button.setGeometry(820, 500, 120, 60)
+        self.reset_button.setGeometry(80, 500, 120, 60)
         self.reset_button.clicked.connect(self.resetUI)
         self.reset_button.hide()
 
@@ -186,7 +186,7 @@ class CameraApp(QWidget):
                 background-color: rgba(40, 150, 160, 250);
             }
         """)
-        self.result_info_button.setGeometry(620, 500, 120, 60)
+        self.result_info_button.setGeometry(280, 500, 120, 60)
         self.result_info_button.clicked.connect(lambda: self.re_game("result_info"))
         self.result_info_button.hide()
 
@@ -256,7 +256,7 @@ class CameraApp(QWidget):
 
         self.greenCnt = 0
         self.redCnt = 0
-        self.calk_skills_once = False
+        self.calk_skills_once = True
         self.capture_data = False
         self.result_type = None
 
@@ -306,7 +306,7 @@ class CameraApp(QWidget):
         self.greenCnt = 0
         self.redCnt = 0
         self.cropped_face = None
-        self.calk_skills_once = False
+        self.calk_skills_once = True
         self.line_color = 'white'
         self.capture_data = False
         self.result_type = None
@@ -356,7 +356,7 @@ class CameraApp(QWidget):
 
                 # 640 x 480 size
                 if self.cam_label.isVisible() :
-                    if face_center_x > 250 and face_center_x <= 390 and face_center_y > 150 and face_center_y <= 330:
+                    if face_center_x > 250 and face_center_x <= 750 and face_center_y > 150 and face_center_y <= 330:
                         self.cropped_face = frame[tmp_y1:tmp_y2, tmp_x1:tmp_x2]
                         self.greenCnt += 1
                         self.redCnt = 0
@@ -454,19 +454,20 @@ class CameraApp(QWidget):
     def makeBox(self, painter):
         """ 능력치 차트 설명서 """
         painter.setPen(QPen(colorList['black'], 10, Qt.SolidLine))
-        painter.drawRect(25, 25, 520, 550)
+        painter.drawRect(479, 25, 520, 550)
 
         painter.setPen(QPen(colorList['white'], 6, Qt.SolidLine))
-        painter.drawRect(25, 25, 520, 550)
+        painter.drawRect(479, 25, 520, 550)
 
         if self.calk_skills_once:
             inf = infer.Inference(self.pro.classification_jpg())
+            self.skills = inf.inf_skills      
             self.careers, self.animals, self.result_info = inf.infer_careers()
             self.calk_skills_once = False
 
         font = QFont("Consolas", 16, QFont.Bold)  # 폰트 설정
         painter.setFont(font)
-        text_rect = QRect(25, 5, 520, 550)
+        text_rect = QRect(479, 5, 520, 550)
         painter.setPen(QPen(colorList['black'], 6, Qt.SolidLine))
 
         if self.result_type == "job":
@@ -484,7 +485,7 @@ class CameraApp(QWidget):
             painter.setFont(font)
             painter.setFont(font)  # 기존 폰트 유지
 
-            text_rect = QRectF(25, 25, 500, 550)  # 전체 텍스트 영역
+            text_rect = QRectF(479, 25, 500, 550)  # 전체 텍스트 영역
 
             # ✅ QTextDocument 사용 (HTML 렌더링 가능)
             doc = QTextDocument()
@@ -594,7 +595,7 @@ class CameraApp(QWidget):
             self.job_button.show()
             self.animal_button.show()
             self.temp_button.show()
-            self.image_label.setGeometry(678, 140, 200, 200)  # (x, y, width, height)
+            self.image_label.setGeometry(156, 140, 200, 200)  # (x, y, width, height)
 
             if self.result_type == "job":
                 emoji = self.careers[0].split()[0]
@@ -612,8 +613,8 @@ class CameraApp(QWidget):
                 # painter.drawText(text_rect, Qt.AlignCenter, text)
             elif self.result_type == "result_info":
                 # self.image_label.hide()
-                hexagon_center_x = 770
-                hexagon_center_y = 240
+                hexagon_center_x = 230
+                hexagon_center_y = 250
                 hexagon_radius = 160
                 self.chart = hexa.HexagonChart(hexagon_center_x, hexagon_center_y, hexagon_radius)
                 self.chart.draw_chart(painter)
