@@ -388,6 +388,7 @@ class CameraApp(QWidget):
         painter.setFont(font)
         text_rect = QRect(479, 5, 520, 550)
         painter.setPen(QPen(colorList['black'], 6, Qt.SolidLine))
+
         if self.result_type == "job":
             formatted_text = self.careers_info.format(
                 int(self.careers_scores[0]), self.careers[0].split(maxsplit=1)[-1],
@@ -431,9 +432,11 @@ class CameraApp(QWidget):
             painter.translate(text_rect.left(), y_offset)  # ✅ x 좌표 조정 (10 제거)
             doc.drawContents(painter)  # HTML 기반으로 출력
             painter.restore()
+
         elif self.result_type == "temp":
             text = f"임시버튼입니다."
             painter.drawText(text_rect, Qt.AlignCenter, text)
+            
         elif self.result_type == "result_info":
             # text = self.result_info
             font = QFont("Consolas", 14)  # 폰트 설정
@@ -537,7 +540,7 @@ class CameraApp(QWidget):
             if not self.loading_label.isVisible():
                 painter.setFont(QFont("Consolas", 25, QFont.Bold))  # 글꼴 크기            
                 painter.setPen(colorList['black']) 
-                painter.drawText(220, 50, "↑↑상단의 카메라 렌즈를 바라봐주세요 ↑↑")
+                painter.drawText(200, 50, "↑↑상단의 카메라 렌즈를 바라봐주세요 ↑↑")
                 # painter.drawText(220, 50, " 상단의 카메라 렌즈를 바라봐주세요 🔼")
                 
         if not self.cam_label.isVisible() and self.skills_mode:
