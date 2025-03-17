@@ -352,11 +352,11 @@ class CameraApp(QWidget):
                 tmp_x1,tmp_y1,tmp_x2,tmp_y2 = self.pro.detect_face(frame)
                 face_center_x = (tmp_x1 + tmp_x2)/2
                 face_center_y = (tmp_y1 + tmp_y2)/2
-                # print(face_center_x,face_center_y)
+                print(face_center_x,face_center_y)
 
                 # 640 x 480 size
                 if self.cam_label.isVisible() :
-                    if face_center_x > 250 and face_center_x <= 750 and face_center_y > 150 and face_center_y <= 330:
+                    if face_center_x > 120 and face_center_x <= 520 and face_center_y > 140 and face_center_y <= 340:
                         self.cropped_face = frame[tmp_y1:tmp_y2, tmp_x1:tmp_x2]
                         self.greenCnt += 1
                         self.redCnt = 0

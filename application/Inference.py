@@ -2,10 +2,10 @@ class Inference:
     def __init__(self, skills) -> None:
         print(skills)
         skills[0] += 0.05
-        skills[1] -= 0.03
-        skills[2] += 0.04
-        skills[3] += 0.0
-        skills[4] -= 0.1
+        skills[1] -= 0.015
+        skills[2] += 0.025
+        skills[3] += 0.02
+        skills[4] -= 0.13
         skills[5] += 0.05
 
         self.inf_skills= {
