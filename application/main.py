@@ -209,7 +209,7 @@ class CameraApp(QWidget):
         }
 
         self.loading_label = QLabel(self)
-        self.movie = QMovie("./resources/loading.gif")
+        self.movie = QMovie("/home/willtek/Bootcamp/application/resources/loading.gif")
         self.loading_label.setMovie(self.movie)
         self.movie.start()  # GIF 실행
 
@@ -513,7 +513,7 @@ class CameraApp(QWidget):
                 x, y, _, _, flower_size, rotation, _ = flower
 
                 # 🌸 꽃 이미지 로드
-                flower_pixmap = QPixmap("./resources/flower.png")  
+                flower_pixmap = QPixmap("/home/willtek/Bootcamp/application/resources/flower.png")  
                 flower_pixmap = flower_pixmap.scaled(flower_size, flower_size, Qt.KeepAspectRatio, Qt.SmoothTransformation)
 
                 # 🎨 회전 적용
