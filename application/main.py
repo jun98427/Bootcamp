@@ -53,7 +53,7 @@ class CameraApp(QWidget):
         self.cam_label.setFixedSize(640, 480)
         self.cam_label.hide()  # 시작 전에는 숨김
         self.cam_label.setGeometry(200, 90, 640, 480)
-        self.flower_state = False
+        self.flower_state = True
 
         # 윈도우 크기 가져오기
         self.actual_width = 1024
@@ -185,6 +185,7 @@ class CameraApp(QWidget):
             self.create_flower(is_initial=True)
         self.flower_timer = QTimer(self)
         self.flower_timer.timeout.connect(self.create_flower)
+        # self.flower_pixmap = QPixmap("../resources/flower.png")
           # 🌸 꽃 이미지 로드
         self.flower_timer.start(150)  # 0.5초마다 꽃 생성
 
@@ -268,8 +269,9 @@ class CameraApp(QWidget):
 
         self.start_button.show()
         self.job_button.hide()
-        self.job_button.hide()
-        self.job_button.hide()
+        self.animal_button.hide()
+        self.temp_button.hide()
+        # self.job_button.hide()
 
         self.flower_timer.start(500)
 
@@ -325,7 +327,7 @@ class CameraApp(QWidget):
                 tmp_x1,tmp_y1,tmp_x2,tmp_y2 = self.pro.detect_face(frame)
                 face_center_x = (tmp_x1 + tmp_x2)/2
                 face_center_y = (tmp_y1 + tmp_y2)/2
-                print(face_center_x,face_center_y)
+                # print(face_center_x,face_center_y)
 
                 # 640 x 480 size
                 if self.cam_label.isVisible() :
@@ -505,7 +507,7 @@ class CameraApp(QWidget):
         painter.setRenderHint(QPainter.Antialiasing)
         painter.fillRect(self.rect(), colorList[self.background_color])  # 배경을 흰색으로 설정 
         
-        if self.flower_state or self.loading_label.isVisible():
+        if self.flower_state and (self.cam_label.isVisible() or self.loading_label.isVisible()):
             # 꽃내리는거 ON
             for flower in self.flowers:
                 x, y, _, _, flower_size, rotation, _ = flower
@@ -543,6 +545,7 @@ class CameraApp(QWidget):
             self.reset_button.show() # reset button 표시
             self.job_button.show()
             self.animal_button.show()
+            self.temp_button.show()
 
             self.chart = hexa.HexagonChart(hexagon_center_x, hexagon_center_y, hexagon_radius)
             self.chart.draw_chart(painter)

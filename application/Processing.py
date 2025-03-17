@@ -23,7 +23,8 @@ class Processing :
         """ 현재 프레임을 캡처하여 저장 """
         self.cropped_face = None
         x1, y1, x2, y2 = 0,0,0,0
-        results = ncnn_model(frame, max_det=1, imgsz=128, conf=0.3)
+        # results = ncnn_model(frame, max_det=1, imgsz=128, conf=0.3)
+        results = ncnn_model.predict(frame, max_det=1, imgsz=128, conf=0.3, verbose=False)
         for i, r in enumerate(results):
             for box in r.boxes.xyxy:  # bounding box (x1, y1, x2, y2)
                 x1, y1, x2, y2 = map(int, box)

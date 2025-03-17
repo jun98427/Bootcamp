@@ -7,7 +7,8 @@ colorList = {
     'white': QColor(255, 255, 255),
     'black': QColor(0, 0, 0),
     'gray': QColor(128, 128, 128),
-    'chart_skyblue' : QColor(0, 150, 255)
+    'chart_skyblue' : QColor(0, 150, 255),
+    'dark_gray': QColor(64, 64, 64),
 }
 
 class HexagonChart:
@@ -26,14 +27,18 @@ class HexagonChart:
         painter.setPen(QPen(color, pend_width))
         painter.drawPolygon(QPolygonF(hexagon_points))
 
-        if alpha != 200:
+        # 육각형 테두리
+        if alpha != 200:    
             painter.setPen(colorList['white'])
             for point in hexagon_points:
                 painter.drawLine(self.center, point)
-    
+
     def draw_chart(self, painter) :
+        # 내부 육각형들
         for i in range(5):
             self.draw_hexagon(painter, self.radius * i / 5, colorList['gray'])
+
+        # 가장 외부
         self.draw_hexagon(painter, self.radius, colorList['black'], 2, 255)
 
     def draw_results(self, painter, skills) :
@@ -48,11 +53,14 @@ class HexagonChart:
             )
             labels.append(key)
 
+        # 육각형 내부 (stat)
+        painter.setPen(QPen(colorList['dark_gray'], 1))
         color = colorList['chart_skyblue']
         color.setAlpha(130)
         painter.setBrush(QBrush(color))
         painter.drawPolygon(QPolygonF(points))
 
+        # status 글씨
         painter.setPen(colorList['black'])
         painter.setFont(QFont("Consolas", 20, QFont.Bold))
 
