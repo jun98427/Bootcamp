@@ -1,5 +1,5 @@
 from PyQt5.QtWidgets import QApplication, QLabel, QPushButton, QWidget, QVBoxLayout
-from PyQt5.QtGui import QImage, QPixmap, QPainter, QPen, QColor, QBrush, QPainterPath, QFont, QPolygonF, QMovie, QTransform
+from PyQt5.QtGui import QImage, QPixmap, QPainter, QPen, QColor, QPainterPath, QFont, QMovie, QTransform
 from PyQt5.QtCore import Qt, QTimer, QPointF, QRect
 import math
 import Camera as cap
@@ -10,6 +10,7 @@ import cv2
 import numpy as np
 import random
 import HexagonChart as hexa
+import Inference as infer
 
 colorList = {
     'red': QColor(255, 0, 0),
@@ -52,6 +53,7 @@ class CameraApp(QWidget):
         self.cam_label.setFixedSize(640, 480)
         self.cam_label.hide()  # 시작 전에는 숨김
         self.cam_label.setGeometry(200, 90, 640, 480)
+        self.flower_state = False
 
         # 윈도우 크기 가져오기
         self.actual_width = 1024
@@ -75,8 +77,79 @@ class CameraApp(QWidget):
                 outline: none; /* 포커스 효과 제거 */
             }
         """)
+        self.start_button.setGeometry(512, 400, 180, 100)
+        self.start_button.clicked.connect(lambda:self.start_camera("job"))
 
-        self.start_button.clicked.connect(self.start_camera)
+        self.start_button.show()
+ 
+        self.job_button = QPushButton("추천 직업", self)
+        self.job_button.setStyleSheet("""
+            QPushButton {
+                font-size: 20px;
+                font-weight: bold;
+                color: white;
+                background-color: rgba(50, 130, 200, 220);
+                border-radius: 25px;
+                padding: 15px 10px;
+                border: 2px solid white;
+                outline: none; /* 포커스 박스 제거 */
+            }
+            QPushButton:hover {
+                background-color: rgba(30, 100, 170, 250);
+            }
+            QPushButton:focus {
+                outline: none; /* 포커스 효과 제거 */
+            }
+        """)
+        self.job_button.setGeometry(60, 500, 120, 60)
+        self.job_button.clicked.connect(lambda: self.re_game("job"))
+        self.job_button.hide()
+ 
+        self.animal_button = QPushButton("닮은 동물", self)
+        self.animal_button.setStyleSheet("""
+            QPushButton {
+                font-size: 20px;
+                font-weight: bold;
+                color: white;
+                background-color: rgba(50, 130, 200, 220);
+                border-radius: 25px;
+                padding: 15px 10px;
+                border: 2px solid white;
+                outline: none; /* 포커스 박스 제거 */
+            }
+            QPushButton:hover {
+                background-color: rgba(30, 100, 170, 250);
+            }
+            QPushButton:focus {
+                outline: none; /* 포커스 효과 제거 */
+            }
+        """)
+        self.animal_button.setGeometry(220, 500, 120, 60)
+        self.animal_button.clicked.connect(lambda: self.re_game("animal"))
+        self.animal_button.hide()
+ 
+        self.temp_button = QPushButton("임시 버튼", self)
+        self.temp_button.setStyleSheet("""
+            QPushButton {
+                font-size: 20px;
+                font-weight: bold;
+                color: white;
+                background-color: rgba(50, 130, 200, 220);
+                border-radius: 25px;
+                padding: 15px 10px;
+                border: 2px solid white;
+                outline: none; /* 포커스 박스 제거 */
+            }
+            QPushButton:hover {
+                background-color: rgba(30, 100, 170, 250);
+            }
+            QPushButton:focus {
+                outline: none; /* 포커스 효과 제거 */
+            }
+        """)
+        self.temp_button.setGeometry(380, 500, 120, 60)
+        self.temp_button.clicked.connect(lambda: self.re_game("temp"))
+        self.temp_button.hide()
 
          # ▶ "초기화" 버튼 추가
         self.reset_button = QPushButton("처음으로", self)
@@ -98,40 +171,7 @@ class CameraApp(QWidget):
         self.reset_button.clicked.connect(self.resetUI)
         self.reset_button.hide()
 
-        self.finish_button = QPushButton("종료하기", self)
-        self.finish_button.setStyleSheet("""
-            QPushButton {
-                font-size: 20px;
-                font-weight: bold;
-                color: black;
-                background-color: rgba(70, 220, 200, 220);
-                border-radius: 25px;
-                padding: 15 10px;
-                border: 2px solid black;
-            }
-            QPushButton:hover {
-                background-color: rgba(40, 150, 160, 250);
-            }
-        """)
-        self.finish_button.setGeometry(620, 500, 120, 60)
-        self.finish_button.clicked.connect(self.closeEvent)
-        self.finish_button.hide()
-
         self.setCursor(Qt.BlankCursor)
-
-        # 투명한 터치 버튼 추가
-        # self.touch_button = QPushButton(self)
-        # self.touch_button.setFixedSize(640, 480)
-        # self.touch_button.setStyleSheet("color: white;")
-        # self.touch_button.setStyleSheet("""
-        #     QPushButton {
-        #         background-color: transparent;
-        #         border: none;
-        #     }
-        # """)
-        # self.touch_button.clicked.connect(self.toggle_capture_mode)
-        # self.touch_button.setGeometry(200, 90, 640, 480)  # (x, y, width, height)
-        # self.touch_button.hide()
 
         # 꽃 애니메이션 타이머 (모든 꽃을 움직이게 함)
         self.animate_flower_timer = QTimer(self)
@@ -167,8 +207,6 @@ class CameraApp(QWidget):
             "예술": 95,
         }
 
-        self.skills3 = {}
-
         self.loading_label = QLabel(self)
         self.movie = QMovie("./resources/loading.gif")
         self.loading_label.setMovie(self.movie)
@@ -189,10 +227,8 @@ class CameraApp(QWidget):
         self.loading_label.hide()
 
         # 캡처 모드 관련 변수
-        self.capture_mode = False
         self.skills_mode = False
-        self.face_detected = False
-        self.countdown = 5
+        self.countdown = 2
         self.countdown_timer = QTimer(self)
         self.countdown_timer.timeout.connect(self.update_countdown)
         self.cropped_face = None
@@ -201,48 +237,73 @@ class CameraApp(QWidget):
         self.greenCnt = 0
         self.redCnt = 0
         self.calk_skills_once = False
-        
+        self.capture_data = False
+        self.result_type = None
+
+    def re_game(self, button_type):
+        """다른 게임 선택하기 (세미 초기화)"""
+        self.result_type = button_type
+ 
+        self.reset_button.show()
+        self.cam_label.hide()
+ 
+        self.start_button.hide()
+        self.job_button.show()
+        self.animal_button.show()
+        self.temp_button.show()
+ 
+        self.countdown_timer.stop()
+        self.calk_skills_once = False
+        self.start_request()
+        # self.touch_button.hide()  # 캡처 모드 버튼 숨기기
+        self.background_color = 'pink'
+        self.update()
 
     def resetUI(self):
         """초기 상태로 되돌리기"""
         self.background_color = 'navy'
 
         self.reset_button.hide()
-        self.finish_button.hide()
         self.cam_label.hide()
 
         self.start_button.show()
+        self.job_button.hide()
+        self.job_button.hide()
+        self.job_button.hide()
 
         self.flower_timer.start(500)
 
         # 캡처 모드 관련 변수
-        self.capture_mode = False
         self.skills_mode = False
-        self.face_detected = False
-        self.countdown = 5
+        self.countdown = 2
         self.greenCnt = 0
         self.redCnt = 0
-        self.calk_skills_once = False
         self.cropped_face = None
+        self.calk_skills_once = False
         self.line_color = 'white'
+        self.capture_data = False
+        self.result_type = None
+        self.flower_state = True
         self.update()
 
-    def start_camera(self):
+    def start_camera(self, button_type):
         """ 카메라 시작 """
-        self.start_button.hide()
-        self.cam_label.show()
-        
-        self.background_color = 'white'
-        
+        self.result_type = button_type
+ 
+        # 처음 진입시 (직업, 동물 등등)
+        if not self.capture_data :
+            self.start_button.hide()
+            self.cam_label.show()
+           
+            self.background_color = 'white'
+            self.capture_data = True
+        # 1번 경험 --> 처음으로 --> 재선택 (재촬영 필요 X)
+        else :
+            self.start_button.hide()
+            self.start_request()
+            self.cam_label.hide()  # 카메라 화면 숨기기
+            self.background_color = 'pink'
         self.update()
-
-    # def toggle_capture_mode(self):
-    #     """ 카메라 화면 터치 시 캡처 모드 토글 """
-    #     self.capture_mode = not self.capture_mode
-    #     if self.capture_mode:
-    #         self.countdown_timer.start(1000)
-    #     else:
-            # self.countdown_timer.stop()
 
     def update_countdown(self):
         """ 카운트다운 업데이트 """
@@ -281,8 +342,7 @@ class CameraApp(QWidget):
                             self.greenCnt = 0
                             if not self.countdown_timer.isActive():
                                 self.countdown_timer.start(1000)
-
-                        
+        
                     else :
                         self.redCnt += 1
                         self.greenCnt = 0
@@ -332,7 +392,7 @@ class CameraApp(QWidget):
                 painter.setBrush(Qt.transparent)  # 내부는 투명
                 painter.drawEllipse(QPointF(320, 190), 120, 140)  # 크기 및 위치 조정
 
-                if (self.capture_mode or self.line_color == 'green') and self.countdown > 0:
+                if self.line_color == 'green' and self.countdown > 0:
                     countdown_text = str(self.countdown)
                     font = QFont("Consolas", 100, QFont.Bold)
                     painter.setFont(font)
@@ -364,85 +424,6 @@ class CameraApp(QWidget):
                 self.cam_label.setPixmap(pixmap)
             self.update()
 
-    def update_careers(self):
-        skills2= self.pro.classification_jpg()
-        
-        print("skills2 : ",skills2)
-        skills2[0] += 0.05
-        skills2[1] -= 0.03
-        skills2[2] += 0.02
-        skills2[3] += 0.02
-        skills2[4] -= 0.12
-        skills2[5] += 0.06
-        print("skills2 : ",skills2)
-
-        for l, v in zip(["리더십", "매력", "신뢰도", "피지컬", "예술", "지능"], skills2):
-            # default_point = random.randint(40, 60)
-            self.skills[l] = min(v*450, 100)
-
-        print(self.skills)
-
-        # print(self.skills)for l, v in zip(["리더십", "매력", "신뢰도", "피지컬", "예술", "지능"], skills2):
-        # self.skills[l] = v * 100
-
-        self.careers = {
-            # 🎭 예술 & 창작 직군 (매력 & 예술 최우선, 신뢰도 & 피지컬 낮음)
-            "🎭 배우, 모델, 인플루언서": self.skills["매력"] * 4.8 + self.skills["예술"] * 3.5 + self.skills["신뢰도"] * 1.0 + self.skills["리더십"] * 0.1 + self.skills["지능"] * 0.1 + self.skills["피지컬"] * 0.5,
-            "🎨 디자이너, 일러스트레이터, 화가": self.skills["매력"] * 0.5 + self.skills["예술"] * 7.1 + self.skills["신뢰도"] * 2.25 + self.skills["리더십"] * 0.15 + self.skills["지능"] * 0.1 + self.skills["피지컬"] * 0.3,
-            "🎤 가수, 성우, 연예인": self.skills["매력"] *4.3 + self.skills["예술"] * 3.7 + self.skills["신뢰도"] * 1.0 + self.skills["리더십"] * 0.1 + self.skills["지능"] * 0.1 + self.skills["피지컬"] * 0.8,
-
-            # 💼 경영 & 리더십 직군 (리더십 & 신뢰도 최우선, 예술 & 피지컬 낮음)
-            "📢 CEO, 정치가, 경영자": self.skills["매력"] * 0.3 + self.skills["예술"] * 0.05 + self.skills["신뢰도"] * 0.8 + self.skills["리더십"] * 4.0 + self.skills["지능"] * 4.8 + self.skills["피지컬"] * 0.05,
-            "📊 마케터, 광고기획자": self.skills["매력"] * 1.5 + self.skills["예술"] * 3.5 + self.skills["신뢰도"] * 2.0 + self.skills["리더십"] * 0.5 + self.skills["지능"] * 2.0 + self.skills["피지컬"] * 0.5,
-            "🏛️ 외교관, 공무원, 행정가": self.skills["매력"] * 0.15 + self.skills["예술"] * 0.15 + self.skills["신뢰도"] * 4.5 + self.skills["리더십"] * 2.0 + self.skills["지능"] * 3.0 + self.skills["피지컬"] * 0.2,
-
-            # 🏋️‍♂️ 스포츠 & 육체 직군 (피지컬 최우선, 지능 & 예술 낮음)
-            "⚽ 운동선수, 트레이너": self.skills["매력"] * 1.5 + self.skills["예술"] * 0.1 + self.skills["신뢰도"] * 0.3 + self.skills["리더십"] * 1.0 + self.skills["지능"] * 0.1 + self.skills["피지컬"] * 7.0,
-            "🚔 경찰, 군인, 소방관": self.skills["매력"] * 0.1 + self.skills["예술"] * 0.1 + self.skills["신뢰도"] * 2.0 + self.skills["리더십"] * 1.1 + self.skills["지능"] * 1.2 + self.skills["피지컬"] * 5.5,
-            "🚀 파일럿, 레이서": self.skills["매력"] * 1.0 + self.skills["예술"] * 1.0 + self.skills["신뢰도"] * 1.7 + self.skills["리더십"] * 1.5 + self.skills["지능"] * 0.8 + self.skills["피지컬"] * 4.0,
-
-            # 🧠 학문 & 기술 직군 (지능 최우선, 피지컬 & 예술 낮음)
-            "🔬 과학자, 교수, 연구원": self.skills["매력"] * 0.15 + self.skills["예술"] * 0.05 + self.skills["신뢰도"] * 1.5 + self.skills["리더십"] * 1.4 + self.skills["지능"] * 6.0 + self.skills["피지컬"] * 0.4,
-            "💻 프로그래머, 데이터 과학자": self.skills["매력"] * 0.3 + self.skills["예술"] * 1.2 + self.skills["신뢰도"] * 1.0 + self.skills["리더십"] * 0.3 + self.skills["지능"] * 7.0 + self.skills["피지컬"] * 0.2,
-            "⚖️ 변호사, 판사": self.skills["매력"] * 0.7 + self.skills["예술"] * 0.2 + self.skills["신뢰도"] * 4.0 + self.skills["리더십"] * 1.0 + self.skills["지능"] * 4.0 + self.skills["피지컬"] * 0.1,
-
-            # 🌍 서비스 & 커뮤니케이션 직군 (매력 & 신뢰도 최우선, 피지컬 낮음)
-            "🎙️ 기자, 아나운서, 방송인": self.skills["매력"] * 3.5 + self.skills["예술"] * 0.5 + self.skills["신뢰도"] * 3.5 + self.skills["리더십"] * 0.5 + self.skills["지능"] * 1.5 + self.skills["피지컬"] * 0.5,
-            "🛫 호텔리어, 승무원, 바텐더": self.skills["매력"] * 6.0 + self.skills["예술"] * 0.6 + self.skills["신뢰도"] * 1.5 + self.skills["리더십"] * 0.5 + self.skills["지능"] * 0.4 + self.skills["피지컬"] * 1.0,
-        }
-
-        self.animal = {
-            # 🦁 리더십 & 피지컬이 강한 동물
-            "🐅 호랑이": self.skills["매력"] * 0.8 + self.skills["예술"] * 0.4 + self.skills["신뢰도"] * 1.2 + self.skills["리더십"] * 4.0 + self.skills["지능"] * 0.5 + self.skills["피지컬"] * 3.1,
-            "🦁 사자": self.skills["매력"] * 1.5 + self.skills["예술"] * 0.3 + self.skills["신뢰도"] * 2.0 + self.skills["리더십"] * 4.5 + self.skills["지능"] * 0.3 + self.skills["피지컬"] * 1.4,
-            "🐺 늑대": self.skills["매력"] * 1.2 + self.skills["예술"] * 0.4 + self.skills["신뢰도"] * 2.5 + self.skills["리더십"] * 3.5 + self.skills["지능"] * 1.0 + self.skills["피지컬"] * 1.4,
-
-            # 🦉 지능이 높은 동물 (인기 있는 동물로 변경)
-            "🦉 올빼미": self.skills["매력"] * 0.5 + self.skills["예술"] * 0.3 + self.skills["신뢰도"] * 1.5 + self.skills["리더십"] * 1.0 + self.skills["지능"] * 5.5 + self.skills["피지컬"] * 1.2,
-            "🐬 돌고래": self.skills["매력"] * 1.0 + self.skills["예술"] * 1.5 + self.skills["신뢰도"] * 1.0 + self.skills["리더십"] * 1.0 + self.skills["지능"] * 4.5 + self.skills["피지컬"] * 1.0,
-            "🐱 고양이": self.skills["매력"] * 3.5 + self.skills["예술"] * 1.0 + self.skills["신뢰도"] * 1.0 + self.skills["리더십"] * 0.5 + self.skills["지능"] * 3.0 + self.skills["피지컬"] * 1.0,
-
-            # 🦜 매력과 예술성이 높은 동물
-            "🦚 공작새": self.skills["매력"] * 5.0 + self.skills["예술"] * 4.5 + self.skills["신뢰도"] * 0.2 + self.skills["리더십"] * 0.1 + self.skills["지능"] * 0.1 + self.skills["피지컬"] * 0.1,
-            "🦜 앵무새": self.skills["매력"] * 4.5 + self.skills["예술"] * 3.5 + self.skills["신뢰도"] * 1.0 + self.skills["리더십"] * 0.5 + self.skills["지능"] * 0.5 + self.skills["피지컬"] * 0.0,
-            "🦋 나비": self.skills["매력"] * 6.0 + self.skills["예술"] * 3.0 + self.skills["신뢰도"] * 0.3 + self.skills["리더십"] * 0.2 + self.skills["지능"] * 0.3 + self.skills["피지컬"] * 0.2,
-
-            # 🐕 신뢰도가 높은 동물
-            "🐶 강아지": self.skills["매력"] * 2.5 + self.skills["예술"] * 0.5 + self.skills["신뢰도"] * 4.0 + self.skills["리더십"] * 1.0 + self.skills["지능"] * 1.5 + self.skills["피지컬"] * 0.5,
-            "🐘 코끼리": self.skills["매력"] * 0.5 + self.skills["예술"] * 0.2 + self.skills["신뢰도"] * 2.5 + self.skills["리더십"] * 1.5 + self.skills["지능"] * 1.8 + self.skills["피지컬"] * 3.5,
-            "🐴 말": self.skills["매력"] * 1.5 + self.skills["예술"] * 0.5 + self.skills["신뢰도"] * 4.5 + self.skills["리더십"] * 2.0 + self.skills["지능"] * 1.0 + self.skills["피지컬"] * 0.5,
-
-            # 🦅 피지컬이 뛰어난 동물
-            "🦅 독수리": self.skills["매력"] * 1.0 + self.skills["예술"] * 0.5 + self.skills["신뢰도"] * 2.0 + self.skills["리더십"] * 2.5 + self.skills["지능"] * 0.8 + self.skills["피지컬"] * 3.2,
-            "🐻 곰": self.skills["매력"] * 1.2 + self.skills["예술"] * 0.5 + self.skills["신뢰도"] * 2.0 + self.skills["리더십"] * 1.5 + self.skills["지능"] * 1.8 + self.skills["피지컬"] * 3.0,
-            "🐢 거북이": self.skills["매력"] * 1.0 + self.skills["예술"] * 0.2 + self.skills["신뢰도"] * 4.5 + self.skills["리더십"] * 1.5 + self.skills["지능"] * 1.5 + self.skills["피지컬"] * 1.3,
-
-            # 🌍 균형 잡힌 동물 (귀엽고 인기 많은 동물 포함)
-            "🐼 판다": self.skills["매력"] * 3.5 + self.skills["예술"] * 1.5 + self.skills["신뢰도"] * 2.0 + self.skills["리더십"] * 1.0 + self.skills["지능"] * 1.0 + self.skills["피지컬"] * 1.0,
-            "🦊 여우": self.skills["매력"] * 4.5 + self.skills["예술"] * 2.0 + self.skills["신뢰도"] * 0.0 + self.skills["리더십"] * 1.0 + self.skills["지능"] * 2.5 + self.skills["피지컬"] * 0.5,
-            "🐿️ 다람쥐": self.skills["매력"] * 3.0 + self.skills["예술"] * 2.5 + self.skills["신뢰도"] * 1.0 + self.skills["리더십"] * 0.5 + self.skills["지능"] * 2.5 + self.skills["피지컬"] * 0.5,
-        }
-
     def makeBox(self, painter):
         """ 능력치 차트 설명서 """
         painter.setPen(QPen(colorList['black'], 10, Qt.SolidLine))
@@ -451,31 +432,20 @@ class CameraApp(QWidget):
         painter.setPen(QPen(colorList['white'], 6, Qt.SolidLine))
         painter.drawRect(25, 25, 500, 550)
 
-        # sorted_skills = sorted(self.skills.items(), key=lambda item: item[1], reverse=True)
         if self.calk_skills_once:
-            self.update_careers()
+            inf = infer.Inference(self.pro.classification_jpg())
+            self.careers, self.animals = inf.infer_careers()
             self.calk_skills_once = False
-        
-        sorted_careers = sorted(self.careers.items(), key=lambda x: x[1], reverse=True)
 
-        top_careers1 = sorted_careers[0][0]  # 1순위 직업
-        top_careers2 = sorted_careers[1][0]  # 2순위 직업
-        top_careers3 = sorted_careers[2][0]  # 3순위 직업
-
-        # text = f"🔥 추천 직업 🔥\n1st: {top_careers1}\n2nd: {top_careers2}\n3rd: {top_careers3}\n\n"
-        # font = QFont("Consolas", 16, QFont.Bold)  # 폰트 설정
-        # painter.setFont(font)
-
-        # self.animal
-        sorted_animals = sorted(self.animal.items(), key=lambda x: x[1], reverse=True)
-
-        top_animals1 = sorted_animals[0][0]  # 1순위 직업
-        top_animals2 = sorted_animals[1][0]  # 2순위 직업
-        top_animals3 = sorted_animals[2][0]  # 3순위 직업
-
-        text = f"🔥 추천 직업 🔥\n1st: {top_careers1}\n2nd: {top_careers2}\n3rd: {top_careers3}\n\n 🔥 추천 동물 🔥\n1st: {top_animals1}\n2nd: {top_animals2}\n3rd: {top_animals3}"
         font = QFont("Consolas", 16, QFont.Bold)  # 폰트 설정
         painter.setFont(font)
+
+        if self.result_type == "job":
+            text = f"🔥 추천 직업 🔥\n1st: {self.careers[0]}\n2nd: {self.careers[1]}\n3rd: {self.careers[2]}\n\n"
+        elif self.result_type == "animal":
+            text = f"🔥 추천 동물 🔥\n1st: {self.animals[0]}\n2nd: {self.animals[1]}\n3rd: {self.animals[2]}\n\n"
+        elif self.result_type == "temp":
+            text = f"임시버튼입니다."
 
         # 박스 내부에 텍스트를 중앙 정렬
         text_rect = QRect(25, 25, 500, 550)
@@ -535,7 +505,7 @@ class CameraApp(QWidget):
         painter.setRenderHint(QPainter.Antialiasing)
         painter.fillRect(self.rect(), colorList[self.background_color])  # 배경을 흰색으로 설정 
         
-        if self.cam_label.isVisible() or self.loading_label.isVisible():
+        if self.flower_state or self.loading_label.isVisible():
             # 꽃내리는거 ON
             for flower in self.flowers:
                 x, y, _, _, flower_size, rotation, _ = flower
@@ -564,13 +534,15 @@ class CameraApp(QWidget):
                 painter.drawText(220, 50, "🔼 상단의 카메라 렌즈를 바라봐주세요 🔼")
                 
         if not self.cam_label.isVisible() and self.skills_mode:
-            self.countdown = 5
+            self.flower_state = False
+            self.countdown = 2
             hexagon_center_x = 770
             hexagon_center_y = 240
             hexagon_radius = 160
             self.makeBox(painter)
             self.reset_button.show() # reset button 표시
-            self.finish_button.show()
+            self.job_button.show()
+            self.animal_button.show()
 
             self.chart = hexa.HexagonChart(hexagon_center_x, hexagon_center_y, hexagon_radius)
             self.chart.draw_chart(painter)

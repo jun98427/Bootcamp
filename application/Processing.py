@@ -13,9 +13,8 @@ bin_path = "/home/willtek/Bootcamp/face_cls_ncnn_model/best_yolov11n_model.ncnn.
 net.load_param(param_path)
 net.load_model(bin_path)
 
-class Processing() :
+class Processing :
     def __init__(self):
-        self.cap = cap.Camera()
         self.cropped_face = None
         self. result_list = [-1,-1,-1,-1,-1,-1]
         self.last_jpg_file = None
@@ -60,7 +59,3 @@ class Processing() :
             # print(output_np)
             self.last_jpg_file = jpg_file
         return self.result_list
-    
-    # def close(self):
-    #     if self.cap.isOpened():
-    #         self.cap.release()
