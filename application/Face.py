@@ -23,6 +23,23 @@ class Celebrity :
 
         if input_encoding:
             input_encoding = input_encoding[0]
+
+        else:
+            input_image = cv2.imread("/home/willtek/Bootcamp/application/captured_frame.jpg")  # 이미지 로드
+            input_image = cv2.cvtColor(input_image, cv2.COLOR_BGR2RGB)  # BGR → RGB 변환 (face_recognition 호환)
+            height, width, _ = input_image.shape
+
+            # ✅ 이미지 전체를 얼굴 영역으로 지정
+            full_image_location = [(0, width, height, 0)]  # (top, right, bottom, left)
+
+            # avg_color = np.mean(input_image, axis=(0, 1))  # (R, G, B) 평균
+            # input_encoding = np.tile(avg_color / 255.0, (128 // 3 + 1))[:128]  # 128차원으로 확장
+            input_encoding = face_recognition.face_encodings(input_image, full_image_location)
+            input_encoding = input_encoding[0]
+            # input_encoding = avg_color / 255.0  # 0~1 사이로 정규화
+            # print("❌ 얼굴을 찾을 수 없습니다.")
+            print("???")
+            # return -1, None
     
         # ✅ 거리 계산 (유클리드 거리)
         distances = np.linalg.norm(self.stored_encodings - input_encoding, axis=1)
@@ -43,5 +60,5 @@ class Celebrity :
             if os.path.exists(temp_path):
                 matched_image_path = temp_path
                 break
-
+        
         return matched_name, matched_image_path

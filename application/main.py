@@ -303,6 +303,12 @@ class CameraApp(QWidget):
                             self.cap.capture_face(self.cropped_face)
                             self.cap.capture_original_face(frame=frame)
                             self.greenCnt = 0
+                            tmp_name, tmp_image_path = self.face.guess()
+                            if tmp_name != -1 :
+                                self.matched_name = tmp_name
+                            if tmp_image_path != None :
+                                self.image_path = tmp_image_path
+                                print("matched_name ", self.matched_name, " path ", self.image_path)
                             if not self.countdown_timer.isActive():
                                 self.countdown_timer.start(1000)
         
@@ -446,10 +452,10 @@ class CameraApp(QWidget):
             doc.drawContents(painter)  # HTML 기반으로 출력
             painter.restore()
 
-        # elif self.result_type == "temp":
-            # req.key
-            # text = f"{self.api_result}"
-            # painter.drawText(text_rect, Qt.AlignCenter, text)
+        elif self.result_type == "temp":
+            # self.matched_name, self.image_path
+            text = f"가장 닮은 연예인 : {self.matched_name}"
+            painter.drawText(text_rect, Qt.AlignCenter, text)
             
         elif self.result_type == "result_info":
             # text = self.result_info
@@ -595,10 +601,23 @@ class CameraApp(QWidget):
                     self.image_label.x(), self.label_y + 50,  # Y 좌표 고정
                     self.image_label.width(), self.image_label.height()
                 )
-            # elif self.result_type == "temp":
-                # 그림그리기
-                # text = f"임시버튼입니다."
-                # painter.drawText(text_rect, Qt.AlignCenter, text)
+            elif self.result_type == "temp":
+                # ✅ 이미지 로드 및 QLabel에 표시
+                pixmap = QPixmap(self.image_path)  # 경로에서 Pixmap 생성
+                max_width = 400
+                max_height = 550
+
+                # ✅ 1단계: 높이를 먼저 550px로 맞추기 (비율 유지)
+                resized_pixmap = pixmap.scaledToHeight(max_height, Qt.SmoothTransformation)
+
+                # ✅ 2단계: 가로가 520px을 초과하면 중앙을 기준으로 크롭
+                if resized_pixmap.width() > max_width:
+                    left = (resized_pixmap.width() - max_width) // 2  # 중앙 기준으로 잘라낼 왼쪽 좌표
+                    rect = QRect(left, 0, max_width, max_height)  # 520x550 크기로 자르기
+                    resized_pixmap = resized_pixmap.copy(rect)
+
+                # ✅ QLabel 또는 painter에 출력
+                painter.drawPixmap(20, 20, resized_pixmap)
             elif self.result_type == "result_info":
                 # self.image_label.hide()
                 hexagon_center_x = 230
@@ -621,8 +640,7 @@ class CameraApp(QWidget):
         self.careers, self.animals, self.careers_scores, self.animals_scores = inf.infer_careers()
         self.result_info, self.careers_info, self.animals_info = inf.get_formats()
         
-        self.matched_name, self.image_path = self.face.guess()
-        print("matched_name ", self.matched_name, " path ", self.image_path)
+        
 
         # API 요청을 백그라운드에서 실행
         self.api_thread = req.ApiThread(self.skills)
