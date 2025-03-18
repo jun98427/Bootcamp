@@ -16,9 +16,9 @@ class Camera :
         """ 현재 프레임을 캡처하여 저장 """
         cropped_face = cv2.cvtColor(cropped_face, cv2.COLOR_BGR2RGB)
         cv2.imwrite("/home/willtek/Bootcamp/application/captured_frame.jpg", cropped_face)
-        # ret, frame = self.cap.read()
-        # if ret:
-        #     cv2.imwrite("captured_frame_original.jpg", frame)
+        ret, frame = self.cap.read()
+        if ret:
+            cv2.imwrite("/home/willtek/Bootcamp/application/captured_frame_original.jpg", frame)
 
 
     def get_frame(self):

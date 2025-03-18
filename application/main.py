@@ -12,6 +12,7 @@ import random
 import HexagonChart as hexa
 import Inference as infer
 import os
+import Face
 
 delete_jpg_file = "/home/willtek/Bootcamp/application/captured_frame.jpg"
 font_path = "/home/willtek/Bootcamp/application/resources/concon_font.ttf"
@@ -445,8 +446,8 @@ class CameraApp(QWidget):
 
         elif self.result_type == "temp":
             # req.key
-            text = f"{self.api_result}"
-            painter.drawText(text_rect, Qt.AlignCenter, text)
+            # text = f"{self.api_result}"
+            # painter.drawText(text_rect, Qt.AlignCenter, text)
             
         elif self.result_type == "result_info":
             # text = self.result_info
