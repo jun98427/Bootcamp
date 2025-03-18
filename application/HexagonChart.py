@@ -12,11 +12,11 @@ colorList = {
 }
 
 class HexagonChart:
-    def __init__(self, x, y, radius) -> None:
+    def __init__(self, x, y, radius, font) -> None:
         self.center = QPointF(x, y)
         self.angles = [math.radians(60*i) for i in range(6)]
         self.radius = radius
-    
+        self.font = font
     def draw_hexagon(self, painter, radius, color, pend_width=1, alpha=200) :
         hexagon_points = [
             QPointF(radius * math.cos(angle), radius * math.sin(angle))
@@ -62,7 +62,7 @@ class HexagonChart:
 
         # status 글씨
         painter.setPen(colorList['black'])
-        painter.setFont(QFont("Consolas", 20, QFont.Bold))
+        painter.setFont(QFont(self.font, 25, QFont.Bold))
 
         center = self.center + QPointF(-25, 10)
         radius2 = self.radius + 26

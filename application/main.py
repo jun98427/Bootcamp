@@ -1,5 +1,5 @@
 from PyQt5.QtWidgets import QApplication, QLabel, QPushButton, QWidget, QVBoxLayout
-from PyQt5.QtGui import QImage, QPixmap, QPainter, QPen, QColor, QPainterPath, QFont, QMovie, QTransform, QTextDocument, QTextOption
+from PyQt5.QtGui import QImage, QPixmap, QPainter, QPen, QColor, QPainterPath, QFont, QMovie, QTransform, QTextDocument, QFontDatabase
 from PyQt5.QtCore import Qt, QTimer, QPointF, QRect, QRectF, QFile, QTextStream
 import math
 import Camera as cap
@@ -14,6 +14,8 @@ import Inference as infer
 import os
 
 delete_jpg_file = "/home/willtek/Bootcamp/application/captured_frame.jpg"
+font_path = "/home/willtek/Bootcamp/application/resources/concon_font.ttf"
+
 
 colorList = {
     'red': QColor(255, 0, 0),
@@ -41,6 +43,17 @@ class CameraApp(QWidget):
     def __init__(self):
         super().__init__()
 
+        font_id = QFontDatabase.addApplicationFont(font_path)
+        if font_id == -1:
+            print("❌ 폰트 로드 실패!")
+        else:
+            print("✅ 폰트 로드 성공!")
+        self.font_families = QFontDatabase.applicationFontFamilies(font_id)
+        # if self.font_families:
+        #     custom_font = QFont(self.font_families[0], 16)  # 16pt 크기로 설정
+        # else:
+        #     custom_font = QFont(self.font_families[0], 16)  # 기본 폰트 (실패 시)
+
         # 윈도우 설정
         self.setWindowTitle("🌸 아름다운 카메라 앱 🌸")
         self.background_color = 'navy'
@@ -64,25 +77,28 @@ class CameraApp(QWidget):
         self.actual_width = 1024
 
         self.start_button = QPushButton("✨ 시작하기 ✨", self)
+        self.start_button.setFont(QFont(self.font_families[0]))
         self.start_button.setObjectName('start')
         self.start_button.setGeometry(512, 400, 180, 100)
         self.start_button.clicked.connect(lambda:self.start_camera("result_info"))
-
         self.start_button.show()
  
         self.job_button = QPushButton("추천 직업", self)
+        self.job_button.setFont(QFont(self.font_families[0]))
         self.job_button.setObjectName('result')
         self.job_button.setGeometry(520, 500, 120, 60)
         self.job_button.clicked.connect(lambda: self.re_game("job"))
         self.job_button.hide()
  
         self.animal_button = QPushButton("닮은 동물", self)
+        self.animal_button.setFont(QFont(self.font_families[0]))
         self.animal_button.setObjectName('result')
         self.animal_button.setGeometry(680, 500, 120, 60)
         self.animal_button.clicked.connect(lambda: self.re_game("animal"))
         self.animal_button.hide()
  
         self.temp_button = QPushButton("임시 버튼", self)
+        self.temp_button.setFont(QFont(self.font_families[0]))
         self.temp_button.setObjectName('result')
         self.temp_button.setGeometry(840, 500, 120, 60)
         self.temp_button.clicked.connect(lambda: self.re_game("temp"))
@@ -90,12 +106,14 @@ class CameraApp(QWidget):
 
          # ▶ "초기화" 버튼 추가
         self.reset_button = QPushButton("처음으로", self)
+        self.reset_button.setFont(QFont(self.font_families[0]))
         self.reset_button.setObjectName('operation')
         self.reset_button.setGeometry(80, 500, 120, 60)
         self.reset_button.clicked.connect(self.resetUI)
         self.reset_button.hide()
 
         self.result_info_button = QPushButton("설명보기", self)
+        self.result_info_button.setFont(QFont(self.font_families[0]))
         self.result_info_button.setObjectName('operation')
         self.result_info_button.setGeometry(280, 500, 120, 60)
         self.result_info_button.clicked.connect(lambda: self.re_game("result_info"))
@@ -173,7 +191,8 @@ class CameraApp(QWidget):
 
         self.image_label = QLabel(self)
         self.image_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        self.image_label.setFont(QFont("Arial", 70))  # 글자 크기 키우기
+        # self.image_label.setFont(QFont("Noto Color Emoji"))
+        self.image_label.setFont(QFont("Noto Color Emoji", 70))  # 글자 크기 키우기
         self.image_label.setGeometry(90, 90, 300, 300)  # (x, y, width, height)
 
         self.api_result = None
@@ -342,7 +361,7 @@ class CameraApp(QWidget):
 
                 if self.line_color == 'green' and self.countdown > 0:
                     countdown_text = str(self.countdown)
-                    font = QFont("Consolas", 100, QFont.Bold)
+                    font = QFont(self.font_families[0], 100, QFont.Bold)
                     painter.setFont(font)
                     
                     # 검정색 테두리 그리기
@@ -386,7 +405,7 @@ class CameraApp(QWidget):
             self.careers, self.animals, self.careers_scores, self.animals_scores, self.result_info, self.careers_info, self.animals_info = inf.infer_careers()
             self.calk_skills_once = False
 
-        font = QFont("Consolas", 16, QFont.Bold)  # 폰트 설정
+        font = QFont(self.font_families[0], 16, QFont.Bold)  # 폰트 설정
         painter.setFont(font)
         text_rect = QRect(479, 5, 520, 550)
         painter.setPen(QPen(colorList['black'], 6, Qt.SolidLine))
@@ -401,7 +420,8 @@ class CameraApp(QWidget):
             # ✅ QTextDocument 사용 (HTML 렌더링 가능)
             doc = QTextDocument()
             doc.setHtml(formatted_text)  # ✅ HTML 적용 (가로 정렬 포함)
-            doc.setTextWidth(text_rect.width())  
+            doc.setTextWidth(text_rect.width())
+            doc.setDefaultFont(font)
 
             # ✅ 세로 중앙 정렬
             total_text_height = doc.size().height()
@@ -423,7 +443,8 @@ class CameraApp(QWidget):
             # ✅ QTextDocument 사용 (HTML 렌더링 가능)
             doc = QTextDocument()
             doc.setHtml(formatted_text)  # ✅ HTML 적용 (가로 정렬 포함)
-            doc.setTextWidth(text_rect.width())  
+            doc.setTextWidth(text_rect.width())
+            doc.setDefaultFont(font)
 
             # ✅ 세로 중앙 정렬
             total_text_height = doc.size().height()
@@ -437,12 +458,12 @@ class CameraApp(QWidget):
 
         elif self.result_type == "temp":
             # req.key
-            text = f"{self.api_result} 임시버튼입니다."
+            text = f"{self.api_result}"
             painter.drawText(text_rect, Qt.AlignCenter, text)
             
         elif self.result_type == "result_info":
             # text = self.result_info
-            font = QFont("Consolas", 14)  # 폰트 설정
+            font = QFont(self.font_families[0], 18)  # 폰트 설정
             painter.setFont(font)
             painter.setFont(font)  # 기존 폰트 유지
 
@@ -541,9 +562,9 @@ class CameraApp(QWidget):
 
             # 🎯 텍스트는 회전 없이 정상적으로 출력됨!
             if not self.loading_label.isVisible():
-                painter.setFont(QFont("Consolas", 25, QFont.Bold))  # 글꼴 크기            
+                painter.setFont(QFont(self.font_families[0], 30, QFont.Bold))  # 글꼴 크기            
                 painter.setPen(colorList['black']) 
-                painter.drawText(200, 50, "↑↑상단의 카메라 렌즈를 바라봐주세요 ↑↑")
+                painter.drawText(215, 50, "↑ ↑ 상단의 카메라 렌즈를 바라봐주세요 ↑ ↑")
                 # painter.drawText(220, 50, " 상단의 카메라 렌즈를 바라봐주세요 🔼")
                 
         if not self.cam_label.isVisible() and self.skills_mode:
@@ -559,14 +580,32 @@ class CameraApp(QWidget):
 
             if self.result_type == "job":
                 emoji = self.careers[0].split()[0]
+                # emoji = "👨🏻‍⚖️"
                 self.image_label.setText(f"<h1>{emoji}</h1>")
+                # self.image_label.setFont(QFont("Noto Color Emoji"))
                 self.image_label.setAlignment(Qt.AlignCenter)  # 중앙 정렬
                 self.image_label.show()
+                if not hasattr(self, "label_y"):  
+                    self.label_y = self.image_label.y()  # 초기 Y 좌표 저장
+
+                self.image_label.setGeometry(
+                    self.image_label.x(), self.label_y + 50,  # Y 좌표 고정
+                    self.image_label.width(), self.image_label.height()
+                )
             elif self.result_type == "animal":
                 emoji = self.animals[0].split()[0]
+                # emoji = "👩🏻‍💼"
                 self.image_label.setText(f"<h1>{emoji}</h1>")
+                # self.image_label.setFont(QFont("Noto Color Emoji"))
                 self.image_label.setAlignment(Qt.AlignCenter)  # 중앙 정렬
                 self.image_label.show()
+                if not hasattr(self, "label_y"):  
+                    self.label_y = self.image_label.y()  # 초기 Y 좌표 저장
+
+                self.image_label.setGeometry(
+                    self.image_label.x(), self.label_y + 50,  # Y 좌표 고정
+                    self.image_label.width(), self.image_label.height()
+                )
             # elif self.result_type == "temp":
                 # 그림그리기
                 # text = f"임시버튼입니다."
@@ -576,7 +615,7 @@ class CameraApp(QWidget):
                 hexagon_center_x = 230
                 hexagon_center_y = 250
                 hexagon_radius = 160
-                self.chart = hexa.HexagonChart(hexagon_center_x, hexagon_center_y, hexagon_radius)
+                self.chart = hexa.HexagonChart(hexagon_center_x, hexagon_center_y, hexagon_radius, self.font_families[0])
                 self.chart.draw_chart(painter)
                 self.chart.draw_results(painter, self.skills) 
 

@@ -34,10 +34,10 @@ class Inference:
                             line-height: 140%;
                             text-align: center;
                         }}
-                        .title {{ font-size: 26px; }}  /* 🥇 금메달 */
-                        .gold {{ font-size: 24px; }}  /* 🥇 금메달 */
-                        .silver {{ font-size: 20px; }} /* 🥈 은메달 */
-                        .bronze {{ font-size: 18px; }} /* 🥉 동메달 */
+                        .title {{ font-size: 30px; }}  /* 🥇 금메달 */
+                        .gold {{ font-size: 28px; }}  /* 🥇 금메달 */
+                        .silver {{ font-size: 26px; }} /* 🥈 은메달 */
+                        .bronze {{ font-size: 24px; }} /* 🥉 동메달 */
                     </style>
                     <p class="title"><b>🔥 추천 직업 🔥</b></p>
                     <p class="gold">🥇 <b>{}점 : {}</b></p>
@@ -51,10 +51,10 @@ class Inference:
                             line-height: 140%;
                             text-align: center;
                         }}
-                        .title {{ font-size: 26px; }}  /* 🥇 금메달 */
-                        .gold {{ font-size: 24px; }}  /* 🥇 금메달 */
-                        .silver {{ font-size: 20px; }} /* 🥈 은메달 */
-                        .bronze {{ font-size: 18px; }} /* 🥉 동메달 */
+                        .title {{ font-size: 30px; }}  /* 🥇 금메달 */
+                        .gold {{ font-size: 28px; }}  /* 🥇 금메달 */
+                        .silver {{ font-size: 26px; }} /* 🥈 은메달 */
+                        .bronze {{ font-size: 24px; }} /* 🥉 동메달 */
                     </style>
                     <p class="title"><b>나와 닮은 동물</b></p>
                     <p class="gold">🥇 <b>{}점 : {}</b></p>
@@ -69,24 +69,24 @@ class Inference:
     def calc_values(self):
         self.careers = {
             # 🎭 예술 & 창작 직군 (매력 & 예술 최우선, 신뢰도 & 피지컬 낮음)
-            "🎭 배우, 모델, 인플루언서": self.inf_skills["매력"] * 4.8 + self.inf_skills["예술"] * 3.5 + self.inf_skills["신뢰도"] * 1.0 + self.inf_skills["리더십"] * 0.1 + self.inf_skills["지능"] * 0.1 + self.inf_skills["피지컬"] * 0.5,
+            "💃 배우, 모델, 인플루언서": self.inf_skills["매력"] * 4.8 + self.inf_skills["예술"] * 3.5 + self.inf_skills["신뢰도"] * 1.0 + self.inf_skills["리더십"] * 0.1 + self.inf_skills["지능"] * 0.1 + self.inf_skills["피지컬"] * 0.5,
             "🎨 디자이너, 일러스트레이터, 화가": self.inf_skills["매력"] * 0.5 + self.inf_skills["예술"] * 7.1 + self.inf_skills["신뢰도"] * 2.25 + self.inf_skills["리더십"] * 0.15 + self.inf_skills["지능"] * 0.1 + self.inf_skills["피지컬"] * 0.3,
             "🎤 가수, 성우, 연예인": self.inf_skills["매력"] *4.3 + self.inf_skills["예술"] * 3.7 + self.inf_skills["신뢰도"] * 1.0 + self.inf_skills["리더십"] * 0.1 + self.inf_skills["지능"] * 0.1 + self.inf_skills["피지컬"] * 0.8,
 
-            # 💼 경영 & 리더십 직군 (리더십 & 신뢰도 최우선, 예술 & 피지컬 낮음)
-            "🤵🏻 CEO, 정치가, 경영자": self.inf_skills["매력"] * 0.3 + self.inf_skills["예술"] * 0.05 + self.inf_skills["신뢰도"] * 0.8 + self.inf_skills["리더십"] * 4.0 + self.inf_skills["지능"] * 4.8 + self.inf_skills["피지컬"] * 0.05,
+            # 💼 경영 & 리더십 직군 (리더십 & 신뢰도 최우선, 예술 & 피지컬 낮음) 📢
+            "💼 CEO, 정치가, 경영자": self.inf_skills["매력"] * 0.3 + self.inf_skills["예술"] * 0.05 + self.inf_skills["신뢰도"] * 0.8 + self.inf_skills["리더십"] * 4.0 + self.inf_skills["지능"] * 4.8 + self.inf_skills["피지컬"] * 0.05,
             "📊 마케터, 광고기획자": self.inf_skills["매력"] * 1.5 + self.inf_skills["예술"] * 3.5 + self.inf_skills["신뢰도"] * 2.0 + self.inf_skills["리더십"] * 0.5 + self.inf_skills["지능"] * 2.0 + self.inf_skills["피지컬"] * 0.5,
             "🏛️ 외교관, 공무원, 행정가": self.inf_skills["매력"] * 0.15 + self.inf_skills["예술"] * 0.15 + self.inf_skills["신뢰도"] * 4.5 + self.inf_skills["리더십"] * 2.0 + self.inf_skills["지능"] * 3.0 + self.inf_skills["피지컬"] * 0.2,
 
             # 🏋️‍♂️ 스포츠 & 육체 직군 (피지컬 최우선, 지능 & 예술 낮음)
-            "⚽ 운동선수, 트레이너": self.inf_skills["매력"] * 1.5 + self.inf_skills["예술"] * 0.1 + self.inf_skills["신뢰도"] * 0.3 + self.inf_skills["리더십"] * 1.0 + self.inf_skills["지능"] * 0.1 + self.inf_skills["피지컬"] * 7.0,
+            "🏋🏻 운동선수, 트레이너": self.inf_skills["매력"] * 1.5 + self.inf_skills["예술"] * 0.1 + self.inf_skills["신뢰도"] * 0.3 + self.inf_skills["리더십"] * 1.0 + self.inf_skills["지능"] * 0.1 + self.inf_skills["피지컬"] * 7.0,
             "🚔 경찰, 군인, 소방관": self.inf_skills["매력"] * 0.1 + self.inf_skills["예술"] * 0.1 + self.inf_skills["신뢰도"] * 2.0 + self.inf_skills["리더십"] * 1.1 + self.inf_skills["지능"] * 1.2 + self.inf_skills["피지컬"] * 5.5,
             "🚀 파일럿, 레이서": self.inf_skills["매력"] * 1.0 + self.inf_skills["예술"] * 1.0 + self.inf_skills["신뢰도"] * 1.7 + self.inf_skills["리더십"] * 1.5 + self.inf_skills["지능"] * 0.8 + self.inf_skills["피지컬"] * 4.0,
 
             # 🧠 학문 & 기술 직군 (지능 최우선, 피지컬 & 예술 낮음)
             "🔬 과학자, 교수, 연구원": self.inf_skills["매력"] * 0.15 + self.inf_skills["예술"] * 0.05 + self.inf_skills["신뢰도"] * 1.5 + self.inf_skills["리더십"] * 1.4 + self.inf_skills["지능"] * 6.0 + self.inf_skills["피지컬"] * 0.4,
-            "💻 프로그래머, 데이터 과학자": self.inf_skills["매력"] * 0.3 + self.inf_skills["예술"] * 1.2 + self.inf_skills["신뢰도"] * 1.0 + self.inf_skills["리더십"] * 0.3 + self.inf_skills["지능"] * 7.0 + self.inf_skills["피지컬"] * 0.2,
-            "⚖️ 변호사, 판사": self.inf_skills["매력"] * 0.7 + self.inf_skills["예술"] * 0.2 + self.inf_skills["신뢰도"] * 4.0 + self.inf_skills["리더십"] * 1.0 + self.inf_skills["지능"] * 4.0 + self.inf_skills["피지컬"] * 0.1,
+            "👨🏻‍💻 프로그래머, 데이터 과학자": self.inf_skills["매력"] * 0.3 + self.inf_skills["예술"] * 1.2 + self.inf_skills["신뢰도"] * 1.0 + self.inf_skills["리더십"] * 0.3 + self.inf_skills["지능"] * 7.0 + self.inf_skills["피지컬"] * 0.2,
+            "🧑🏻‍⚖️ 변호사, 판사": self.inf_skills["매력"] * 0.7 + self.inf_skills["예술"] * 0.2 + self.inf_skills["신뢰도"] * 4.0 + self.inf_skills["리더십"] * 1.0 + self.inf_skills["지능"] * 4.0 + self.inf_skills["피지컬"] * 0.1,
 
             # 🌍 서비스 & 커뮤니케이션 직군 (매력 & 신뢰도 최우선, 피지컬 낮음)
             "📰 기자, 아나운서, 방송인": self.inf_skills["매력"] * 3.5 + self.inf_skills["예술"] * 0.5 + self.inf_skills["신뢰도"] * 3.5 + self.inf_skills["리더십"] * 0.5 + self.inf_skills["지능"] * 1.5 + self.inf_skills["피지컬"] * 0.5,

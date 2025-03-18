@@ -1,12 +1,13 @@
 QPushButton#start {
-    font-size: 45px;
+    font-size: 50px;
     font-weight: bold;
     color: white;
     background-color: rgba(50, 130, 200, 220);
     border-radius: 25px;
     padding: 30px 60px;
     border: 2px solid white;
-    outline: none; /* 포커스 박스 제거 */
+    outline: 
+    none; /* 포커스 박스 제거 */
 }
 
 QPushButton#start:hover {
@@ -18,7 +19,7 @@ QPushButton#focus {
 }
 
 QPushButton#result {
-    font-size: 20px;
+    font-size: 25px;
     font-weight: bold;
     color: white;
     background-color: rgba(50, 130, 200, 220);
@@ -37,7 +38,7 @@ QPushButton#result:focus {
 }
 
 QPushButton#operation{
-    font-size: 20px;
+    font-size: 25px;
     font-weight: bold;
     color: black;
     background-color: rgba(70, 220, 200, 220);
