@@ -176,6 +176,8 @@ class CameraApp(QWidget):
         self.image_label.setFont(QFont("Arial", 70))  # 글자 크기 키우기
         self.image_label.setGeometry(90, 90, 300, 300)  # (x, y, width, height)
 
+        self.api_result = None
+
     def re_game(self, button_type):
         """다른 게임 선택하기 (세미 초기화)"""
         self.result_type = button_type
@@ -191,7 +193,7 @@ class CameraApp(QWidget):
  
         self.countdown_timer.stop()
         self.calk_skills_once = False
-        self.start_request()
+        # self.start_request()
         # self.touch_button.hide()  # 캡처 모드 버튼 숨기기
         self.background_color = 'pink'
         self.update()
@@ -246,7 +248,7 @@ class CameraApp(QWidget):
         # 1번 경험 --> 처음으로 --> 재선택 (재촬영 필요 X)
         else :
             self.start_button.hide()
-            self.start_request()
+            # self.start_request()
             self.cam_label.hide()  # 카메라 화면 숨기기
             self.background_color = 'pink'
         self.update()
@@ -434,7 +436,8 @@ class CameraApp(QWidget):
             painter.restore()
 
         elif self.result_type == "temp":
-            text = f"임시버튼입니다."
+            # req.key
+            text = f"{self.api_result} 임시버튼입니다."
             painter.drawText(text_rect, Qt.AlignCenter, text)
             
         elif self.result_type == "result_info":
@@ -595,11 +598,11 @@ class CameraApp(QWidget):
     def handle_response(self, data):
         self.loading_label.hide()  # 로딩 메시지 숨김
         self.skills_mode = True
-        
-        # if "error" in data:
-        #     self.result_label.setText(f"에러 발생: {data['error']}")
-        # else:
-        #     self.skills = data
+        # print("📌 받은 데이터:", data)  # 터미널에서 확인
+
+        # 딕셔너리에서 "content" 값 가져오기
+        self.api_result = data.get("content", "데이터 없음")
+        # print("📌 content 값:", self.api_result)  # 터미널에서 확인
 
     def load_stylesheet(self):
         # stylesheet.qss 파일 로드

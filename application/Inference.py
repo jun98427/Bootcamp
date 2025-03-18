@@ -74,7 +74,7 @@ class Inference:
             "🎤 가수, 성우, 연예인": self.inf_skills["매력"] *4.3 + self.inf_skills["예술"] * 3.7 + self.inf_skills["신뢰도"] * 1.0 + self.inf_skills["리더십"] * 0.1 + self.inf_skills["지능"] * 0.1 + self.inf_skills["피지컬"] * 0.8,
 
             # 💼 경영 & 리더십 직군 (리더십 & 신뢰도 최우선, 예술 & 피지컬 낮음)
-            "📢 CEO, 정치가, 경영자": self.inf_skills["매력"] * 0.3 + self.inf_skills["예술"] * 0.05 + self.inf_skills["신뢰도"] * 0.8 + self.inf_skills["리더십"] * 4.0 + self.inf_skills["지능"] * 4.8 + self.inf_skills["피지컬"] * 0.05,
+            "🤵🏻 CEO, 정치가, 경영자": self.inf_skills["매력"] * 0.3 + self.inf_skills["예술"] * 0.05 + self.inf_skills["신뢰도"] * 0.8 + self.inf_skills["리더십"] * 4.0 + self.inf_skills["지능"] * 4.8 + self.inf_skills["피지컬"] * 0.05,
             "📊 마케터, 광고기획자": self.inf_skills["매력"] * 1.5 + self.inf_skills["예술"] * 3.5 + self.inf_skills["신뢰도"] * 2.0 + self.inf_skills["리더십"] * 0.5 + self.inf_skills["지능"] * 2.0 + self.inf_skills["피지컬"] * 0.5,
             "🏛️ 외교관, 공무원, 행정가": self.inf_skills["매력"] * 0.15 + self.inf_skills["예술"] * 0.15 + self.inf_skills["신뢰도"] * 4.5 + self.inf_skills["리더십"] * 2.0 + self.inf_skills["지능"] * 3.0 + self.inf_skills["피지컬"] * 0.2,
 
@@ -89,7 +89,7 @@ class Inference:
             "⚖️ 변호사, 판사": self.inf_skills["매력"] * 0.7 + self.inf_skills["예술"] * 0.2 + self.inf_skills["신뢰도"] * 4.0 + self.inf_skills["리더십"] * 1.0 + self.inf_skills["지능"] * 4.0 + self.inf_skills["피지컬"] * 0.1,
 
             # 🌍 서비스 & 커뮤니케이션 직군 (매력 & 신뢰도 최우선, 피지컬 낮음)
-            "🎙️ 기자, 아나운서, 방송인": self.inf_skills["매력"] * 3.5 + self.inf_skills["예술"] * 0.5 + self.inf_skills["신뢰도"] * 3.5 + self.inf_skills["리더십"] * 0.5 + self.inf_skills["지능"] * 1.5 + self.inf_skills["피지컬"] * 0.5,
+            "📰 기자, 아나운서, 방송인": self.inf_skills["매력"] * 3.5 + self.inf_skills["예술"] * 0.5 + self.inf_skills["신뢰도"] * 3.5 + self.inf_skills["리더십"] * 0.5 + self.inf_skills["지능"] * 1.5 + self.inf_skills["피지컬"] * 0.5,
             "🛫 호텔리어, 승무원, 바텐더": self.inf_skills["매력"] * 6.0 + self.inf_skills["예술"] * 0.6 + self.inf_skills["신뢰도"] * 1.5 + self.inf_skills["리더십"] * 0.5 + self.inf_skills["지능"] * 0.4 + self.inf_skills["피지컬"] * 1.0,
         }
 
