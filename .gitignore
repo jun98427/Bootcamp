@@ -2,4 +2,5 @@
 /ncnn/*
 /application/__pycache__/*
 /application/captured_frame.jpg
+/application/captured_frame_original.jpg
 *.pyc

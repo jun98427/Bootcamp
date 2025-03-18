@@ -12,7 +12,7 @@ import random
 import HexagonChart as hexa
 import Inference as infer
 import os
-import Face
+import Face as face
 
 delete_jpg_file = "/home/willtek/Bootcamp/application/captured_frame.jpg"
 font_path = "/home/willtek/Bootcamp/application/resources/concon_font.ttf"
@@ -195,6 +195,7 @@ class CameraApp(QWidget):
         self.image_label.setGeometry(90, 90, 300, 300)  # (x, y, width, height)
 
         self.api_result = None
+        self.face = face.Celebrity();
 
     def re_game(self, button_type):
         """다른 게임 선택하기 (세미 초기화)"""
@@ -300,6 +301,7 @@ class CameraApp(QWidget):
                             self.line_color = 'green'
                             self.cropped_face = cv2.cvtColor(self.cropped_face, cv2.COLOR_BGR2RGB)
                             self.cap.capture_face(self.cropped_face)
+                            self.cap.capture_original_face(frame=frame)
                             self.greenCnt = 0
                             if not self.countdown_timer.isActive():
                                 self.countdown_timer.start(1000)
@@ -444,7 +446,7 @@ class CameraApp(QWidget):
             doc.drawContents(painter)  # HTML 기반으로 출력
             painter.restore()
 
-        elif self.result_type == "temp":
+        # elif self.result_type == "temp":
             # req.key
             # text = f"{self.api_result}"
             # painter.drawText(text_rect, Qt.AlignCenter, text)
@@ -619,6 +621,9 @@ class CameraApp(QWidget):
         self.careers, self.animals, self.careers_scores, self.animals_scores = inf.infer_careers()
         self.result_info, self.careers_info, self.animals_info = inf.get_formats()
         
+        self.matched_name, self.image_path = self.face.guess()
+        print("matched_name ", self.matched_name, " path ", self.image_path)
+
         # API 요청을 백그라운드에서 실행
         self.api_thread = req.ApiThread(self.skills)
         self.api_thread.finished_signal.connect(self.handle_response)  # 완료 시 실행할 함수 연결
