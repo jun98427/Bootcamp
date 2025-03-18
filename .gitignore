@@ -1,4 +1,4 @@
 /env/*
 /ncnn/*
-application/__pycache__/*
+/application/__pycache__/*
 /application/captured_frame.jpg
