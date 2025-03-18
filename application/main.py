@@ -15,6 +15,8 @@ import os
 import Face as face
 
 delete_jpg_file = "/home/willtek/Bootcamp/application/captured_frame.jpg"
+delete_jpg_file2 = "/home/willtek/Bootcamp/application/captured_frame_original.jpg"
+
 font_path = "/home/willtek/Bootcamp/application/resources/concon_font.ttf"
 
 
@@ -243,6 +245,12 @@ class CameraApp(QWidget):
         if os.path.exists(delete_jpg_file):  # 파일이 존재하는지 확인
             os.remove(delete_jpg_file)  # 파일 삭제
             print(f"{delete_jpg_file} 삭제 완료!")
+        else:
+            print("파일이 존재하지 않습니다.")
+
+        if os.path.exists(delete_jpg_file2):  # 파일이 존재하는지 확인
+            os.remove(delete_jpg_file2)  # 파일 삭제
+            print(f"{delete_jpg_file2} 삭제 완료!")
         else:
             print("파일이 존재하지 않습니다.")
 
@@ -615,9 +623,10 @@ class CameraApp(QWidget):
                     left = (resized_pixmap.width() - max_width) // 2  # 중앙 기준으로 잘라낼 왼쪽 좌표
                     rect = QRect(left, 0, max_width, max_height)  # 520x550 크기로 자르기
                     resized_pixmap = resized_pixmap.copy(rect)
-
+                x_size = resized_pixmap.width()
+                x_pos = (450 - x_size) // 2
                 # ✅ QLabel 또는 painter에 출력
-                painter.drawPixmap(20, 20, resized_pixmap)
+                painter.drawPixmap(x_pos, 20, resized_pixmap)
             elif self.result_type == "result_info":
                 # self.image_label.hide()
                 hexagon_center_x = 230
