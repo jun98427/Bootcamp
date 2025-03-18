@@ -122,6 +122,7 @@ class CameraApp(QWidget):
         self.setCursor(Qt.BlankCursor)
 
         # 꽃 애니메이션 타이머 (모든 꽃을 움직이게 함)
+        self.flower_pixmap = QPixmap("/home/willtek/Bootcamp/application/resources/flower.png")
         self.animate_flower_timer = QTimer(self)
         self.animate_flower_timer.timeout.connect(self.animate_flower)
         self.animate_flower_timer.start(50)  # 50ms마다 모든 꽃 업데이트
@@ -133,7 +134,6 @@ class CameraApp(QWidget):
             self.create_flower(is_initial=True)
         self.flower_timer = QTimer(self)
         self.flower_timer.timeout.connect(self.create_flower)
-        # self.flower_pixmap = QPixmap("../resources/flower.png")
           # 🌸 꽃 이미지 로드
         self.flower_timer.start(150)  # 0.5초마다 꽃 생성
 
@@ -185,13 +185,11 @@ class CameraApp(QWidget):
 
         self.greenCnt = 0
         self.redCnt = 0
-        self.calk_skills_once = True
         self.capture_data = False
         self.result_type = None
 
         self.image_label = QLabel(self)
         self.image_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        # self.image_label.setFont(QFont("Noto Color Emoji"))
         self.image_label.setFont(QFont("Noto Color Emoji", 70))  # 글자 크기 키우기
         self.image_label.setGeometry(90, 90, 300, 300)  # (x, y, width, height)
 
@@ -211,9 +209,6 @@ class CameraApp(QWidget):
         self.temp_button.show()
  
         self.countdown_timer.stop()
-        self.calk_skills_once = False
-        # self.start_request()
-        # self.touch_button.hide()  # 캡처 모드 버튼 숨기기
         self.background_color = 'pink'
         self.update()
 
@@ -229,7 +224,6 @@ class CameraApp(QWidget):
         self.job_button.hide()
         self.animal_button.hide()
         self.temp_button.hide()
-        # self.job_button.hide()
 
         self.flower_timer.start(500)
 
@@ -239,7 +233,6 @@ class CameraApp(QWidget):
         self.greenCnt = 0
         self.redCnt = 0
         self.cropped_face = None
-        self.calk_skills_once = True
         self.line_color = 'white'
         self.capture_data = False
         self.result_type = None
@@ -278,7 +271,7 @@ class CameraApp(QWidget):
             self.countdown -= 1
         else:
             self.countdown_timer.stop()
-            self.calk_skills_once = True
+            self.loading_label.show()
             self.start_request()
             self.cam_label.hide()  # 카메라 화면 숨기기
             self.background_color = 'pink'
@@ -398,12 +391,6 @@ class CameraApp(QWidget):
 
         painter.setPen(QPen(colorList['white'], 6, Qt.SolidLine))
         painter.drawRect(479, 25, 520, 550)
-
-        if self.calk_skills_once:
-            inf = infer.Inference(self.pro.classification_jpg())
-            self.skills = inf.inf_skills      
-            self.careers, self.animals, self.careers_scores, self.animals_scores, self.result_info, self.careers_info, self.animals_info = inf.infer_careers()
-            self.calk_skills_once = False
 
         font = QFont(self.font_families[0], 16, QFont.Bold)  # 폰트 설정
         painter.setFont(font)
@@ -544,8 +531,7 @@ class CameraApp(QWidget):
                 x, y, _, _, flower_size, rotation, _ = flower
 
                 # 🌸 꽃 이미지 로드
-                flower_pixmap = QPixmap("/home/willtek/Bootcamp/application/resources/flower.png")  
-                flower_pixmap = flower_pixmap.scaled(flower_size, flower_size, Qt.KeepAspectRatio, Qt.SmoothTransformation)
+                flower_pixmap = self.flower_pixmap.scaled(flower_size, flower_size, Qt.KeepAspectRatio, Qt.SmoothTransformation)
 
                 # 🎨 회전 적용
                 painter.save()  # 💾 현재 상태 저장 (변환 이전 상태)
@@ -627,10 +613,13 @@ class CameraApp(QWidget):
         event.accept()
 
     def start_request(self):
-        self.loading_label.show()  # 로딩 메시지 표시
+        inf = infer.Inference(self.pro.classification_jpg())
+        self.skills = inf.get_skills()  
+        self.careers, self.animals, self.careers_scores, self.animals_scores = inf.infer_careers()
+        self.result_info, self.careers_info, self.animals_info = inf.get_formats()
         
         # API 요청을 백그라운드에서 실행
-        self.api_thread = req.ApiThread()
+        self.api_thread = req.ApiThread(self.skills)
         self.api_thread.finished_signal.connect(self.handle_response)  # 완료 시 실행할 함수 연결
         self.api_thread.start()
 

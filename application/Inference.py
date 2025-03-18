@@ -138,5 +138,10 @@ class Inference:
             careers.append(sorted_careers[i][0])
             animals.append(sorted_animals[i][0])
 
-        return careers, animals, careers_scores, animals_scores, self.result_info, self.careers_info, self.animals_info
+        return careers, animals, careers_scores, animals_scores
 
+    def get_formats(self):
+        return self.result_info, self.careers_info, self.animals_info
+    
+    def get_skills(self) :
+        return self.inf_skills
