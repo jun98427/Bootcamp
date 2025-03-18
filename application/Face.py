@@ -5,6 +5,7 @@ import cv2
 import os
 from PIL import Image
 import matplotlib.pyplot as plt
+import matplotlib.font_manager as fm
 
 # ✅ 저장된 벡터 데이터 불러오기
 with open("/home/willtek/Bootcamp/application/resources/face_encodings.pkl", "rb") as f:
@@ -36,10 +37,8 @@ if input_encoding:
     matched_image_path = None
     for ext in image_extensions:
         temp_path = os.path.join(celebrity_folder, f"{matched_name}{ext}")
-        print("2")
         if os.path.exists(temp_path):
             matched_image_path = temp_path
-            print("1")
             break
     
     if matched_image_path:
@@ -49,7 +48,8 @@ if input_encoding:
         
         plt.imshow(img)
         plt.axis("off")
-        plt.title(f"가장 유사한 연예인: {matched_name}", fontproperties="AppleGothic")  # 한글 지원 폰트 설정
+        plt.rc("font", family="NanumGothic")
+        plt.title(f"가장 유사한 연예인: {matched_name}")
         plt.show()
 
     else:
