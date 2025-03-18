@@ -639,11 +639,9 @@ class CameraApp(QWidget):
         self.skills = inf.get_skills()  
         self.careers, self.animals, self.careers_scores, self.animals_scores = inf.infer_careers()
         self.result_info, self.careers_info, self.animals_info = inf.get_formats()
-        
-        
 
         # API 요청을 백그라운드에서 실행
-        self.api_thread = req.ApiThread(self.skills)
+        self.api_thread = req.ApiThread(self.matched_name)
         self.api_thread.finished_signal.connect(self.handle_response)  # 완료 시 실행할 함수 연결
         self.api_thread.start()
 
