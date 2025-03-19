@@ -190,6 +190,7 @@ class CameraApp(QWidget):
         self.countdown_timer = QTimer(self)
         self.countdown_timer.timeout.connect(self.update_countdown)
         self.frames = []
+        self.cropped_frames = []
         self.line_color = 'white'
 
         self.greenCnt = 0
@@ -248,7 +249,6 @@ class CameraApp(QWidget):
         self.countdown = 2
         self.greenCnt = 0
         self.redCnt = 0
-        self.frames = []
         self.line_color = 'white'
         self.capture_data = False
         self.result_type = None
@@ -320,7 +320,7 @@ class CameraApp(QWidget):
                         if self.greenCnt >= 10 :
                             self.line_color = 'green'
                             self.frames.append(frame)
-                            self.frames.append(cropped_face)
+                            self.cropped_frames.append(cropped_face)
                             # self.cropped_face = cv2.cvtColor(self.cropped_face, cv2.COLOR_BGR2RGB)
                             # self.face_thread.set_frame(frame=frame)
                             # self.cap.capture_face(self.cropped_face)
@@ -721,12 +721,14 @@ class CameraApp(QWidget):
         event.accept()
 
     def start_request(self):
-        inf = infer.Inference(self.pro.classification())
+        inf = infer.Inference(self.pro.classification(self.cropped_frames))
         self.skills = inf.get_skills()  
         self.careers, self.animals, self.careers_scores, self.animals_scores = inf.infer_careers()
         self.result_info, self.careers_info, self.animals_info, self.celeb_info = inf.get_formats()
-
-        self.face_thread.set_frame(frames=self.frames)
+        frames = self.frames + self.cropped_frames
+        self.face_thread.set_frame(frames=frames)
+        self.frames = []
+        self.cropped_frames = []
 
 
     def handle_api_response(self, data):

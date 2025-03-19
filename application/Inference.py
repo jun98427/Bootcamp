@@ -95,7 +95,9 @@ class Inference:
 
         for l, v in zip(["리더십", "매력", "신뢰도", "피지컬", "예술", "지능"], skills):
             # default_point = random.randint(40, 60)
-            self.inf_skills[l] = min(v*450, 100)
+            v *= 450
+            v = min(v, 100)
+            self.inf_skills[l] = max(v, 40)
 
     def calc_values(self):
         self.careers = {
