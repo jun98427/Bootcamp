@@ -45,11 +45,8 @@ class Processing :
     
     # 캡쳐된 jpg 파일을 받아서 classification 하고 6개짜리 리스트를 출력
     def classification(self):
-        # jpg_file = cv2.imread("/home/willtek/Bootcamp/application/captured_frame.jpg")
-        # if jpg_file is None:
-        #     print("이미지를 불러오지 못했습니다. 파일 경로를 확인하세요!")
-        # else:
-        #     print("이미지 로드 성공!")
+        output = [0.11, 0.175, 0.1675, 0.15, 0.30, 0.12]
+
         if not np.array_equal(self.cropped_face, self.last_cropped_face):
             # cv2.imread("captured_frame.jpg", jpg_file)
             self.result_list = [-1,-1,-1,-1,-1,-1]

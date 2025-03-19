@@ -11,7 +11,56 @@ class Celebrity(QThread) :
         # ✅ 저장된 벡터 데이터 불러오기
         with open("/home/willtek/Bootcamp/application/resources/face_encodings.pkl", "rb") as f:
             self.stored_encodings, self.stored_names = pickle.load(f)
+            
+    def get_average_point(points):
+        """ 주어진 랜드마크 포인트들의 평균 좌표를 반환 """
+        x_coords = [p[0] for p in points]
+        y_coords = [p[1] for p in points]
+        return (np.mean(x_coords), np.mean(y_coords))
+    
+    def classify_face_type(face_landmarks):
+        """ 얼굴 랜드마크를 기반으로 6가지 유형 중 하나로 분류 """
 
+        # 랜드마크에서 특정 부위 추출
+        left_eye = face_landmarks['left_eye']
+        right_eye = face_landmarks['right_eye']
+        left_eyebrow = face_landmarks['left_eyebrow']
+        right_eyebrow = face_landmarks['right_eyebrow']
+        chin = face_landmarks['chin']
+        nose_bridge = face_landmarks['nose_bridge']
+        nose_tip = face_landmarks['nose_tip']
+
+        # 주요 포인트 계산
+        A = get_average_point([chin[0], chin[-1]])  # 헤어라인 (추정)
+        Q = chin[len(chin) // 2]  # 턱 중앙
+        F = get_average_point([left_eye[0], right_eye[0]])  # 두 눈 앞머리 평균
+        C = get_average_point([left_eyebrow[0], right_eyebrow[0]])  # 눈썹 앞머리 평균
+        D = get_average_point([left_eyebrow[2], right_eyebrow[2]])  # 눈썹산
+        E = get_average_point([left_eyebrow[-1], right_eyebrow[-1]])  # 눈썹 꼬리
+        R = get_average_point([left_eye[1], right_eye[1]])  # 눈 위 지점
+        H = get_average_point([left_eye[-1], right_eye[-1]])  # 눈꼬리
+        I = get_average_point([chin[5], chin[-6]])  # 광대뼈 중앙
+
+        # 얼굴 주요 비율 계산
+        eye_slant = (H[1] - F[1]) / max(abs(H[0] - F[0]), 1)  # 눈매 기울기
+        jaw_ratio = abs(A[1] - Q[1]) / max(abs(A[0] - Q[0]), 1)  # 턱선 비율
+        face_width = abs(chin[0][0] - chin[-1][0])  # 얼굴 너비
+        face_length = abs(A[1] - Q[1])  # 얼굴 길이
+        face_ratio = face_length / max(face_width, 1)  # 얼굴 길이 대비 너비 비율
+
+        # 얼굴형 분류
+        if eye_slant > 0.2 and jaw_ratio > 0.5:
+            return "고양이상"
+        elif 0.8 <= face_ratio <= 1.2 and 0.4 <= jaw_ratio <= 0.6:
+            return "황제상"
+        elif face_ratio < 0.9 and jaw_ratio < 0.4:
+            return "너구리상"
+        elif eye_slant < -0.1 and face_ratio > 1.2:
+            return "구렁이상"
+        elif 1.0 <= face_ratio <= 1.3 and jaw_ratio >= 0.5:
+            return "이리상"
+        else:
+            return "호랑이상"
     def guess(self):
         # ✅ 입력 이미지 얼굴 벡터 추출
         input_image = face_recognition.load_image_file("/home/willtek/Bootcamp/application/captured_frame_original.jpg")
@@ -19,6 +68,7 @@ class Celebrity(QThread) :
         print(f"감지된 얼굴 개수: {len(face_locations)}")
 
         input_encoding = face_recognition.face_encodings(input_image, face_locations)
+        face_landmarks_list = face_recognition.face_landmarks(input_image)
 
         if input_encoding:
             input_encoding = input_encoding[0]

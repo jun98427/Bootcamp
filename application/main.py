@@ -673,7 +673,7 @@ class CameraApp(QWidget):
                 # ✅ 이미지 로드 및 QLabel에 표시
                 pixmap = QPixmap(self.image_path)  # 경로에서 Pixmap 생성
                 max_width = 400
-                max_height = 550
+                max_height = 470
 
                 # ✅ 1단계: 높이를 먼저 550px로 맞추기 (비율 유지)
                 resized_pixmap = pixmap.scaledToHeight(max_height, Qt.SmoothTransformation)
@@ -684,7 +684,7 @@ class CameraApp(QWidget):
                     rect = QRect(left, 0, max_width, max_height)  # 520x550 크기로 자르기
                     resized_pixmap = resized_pixmap.copy(rect)
                 x_size = resized_pixmap.width()
-                x_pos = (450 - x_size) // 2
+                x_pos = (470 - x_size) // 2
                 # ✅ QLabel 또는 painter에 출력
                 painter.drawPixmap(x_pos, 20, resized_pixmap)
             elif self.result_type == "result_info":
@@ -698,7 +698,7 @@ class CameraApp(QWidget):
             elif self.result_type == "temp":
                 pixmap = QPixmap(self.image_path)  # 경로에서 Pixmap 생성
                 max_width = 400
-                max_height = 550
+                max_height = 470
 
                 # ✅ 1단계: 높이를 먼저 550px로 맞추기 (비율 유지)
                 resized_pixmap = pixmap.scaledToHeight(max_height, Qt.SmoothTransformation)
@@ -709,7 +709,7 @@ class CameraApp(QWidget):
                     rect = QRect(left, 0, max_width, max_height)  # 520x550 크기로 자르기
                     resized_pixmap = resized_pixmap.copy(rect)
                 x_size = resized_pixmap.width()
-                x_pos = (450 - x_size) // 2
+                x_pos = (470 - x_size) // 2
                 # ✅ QLabel 또는 painter에 출력
                 painter.drawPixmap(x_pos, 20, resized_pixmap)
 

@@ -36,7 +36,46 @@ class FaceRecognitionThread(QThread):
                 "matched_name" : matched_name,
                 "matched_image_path" : matched_image_path
             })
-
+    # def get_average_point(points):
+    #     """ 주어진 랜드마크 포인트들의 평균 좌표를 반환 """
+    #     x_coords = [p[0] for p in points]
+    #     y_coords = [p[1] for p in points]
+    #     return (np.mean(x_coords), np.mean(y_coords))
+    
+    def classify_face_type(self,face_landmarks):
+        # 주요 포인트 가져오기
+        A = np.mean(np.array(face_landmarks['top_lip']), axis=0)  # 헤어라인 중심
+        Q = np.mean(np.array(face_landmarks['bottom_lip']), axis=0)  # 턱 중심
+        C = np.mean(np.array(face_landmarks['left_eyebrow'][:2] + face_landmarks['right_eyebrow'][:2]), axis=0)  # 눈썹 앞머리 평균
+        D = np.mean(np.array(face_landmarks['left_eyebrow'][2:4] + face_landmarks['right_eyebrow'][2:4]), axis=0)  # 눈썹 산 평균
+        E = np.mean(np.array(face_landmarks['left_eyebrow'][4:] + face_landmarks['right_eyebrow'][4:]), axis=0)  # 눈썹 꼬리 평균
+        F = np.mean(np.array(face_landmarks['left_eye'][:2] + face_landmarks['right_eye'][:2]), axis=0)  # 눈 앞머리 평균
+        H = np.mean(np.array(face_landmarks['left_eye'][3:] + face_landmarks['right_eye'][3:]), axis=0)  # 눈 꼬리 평균
+        I = np.mean(np.array(face_landmarks['chin'][7:10]), axis=0)  # 광대뼈 위치
+        R = np.mean(np.array(face_landmarks['nose_bridge']), axis=0)  # 눈 위(코 시작점)
+        
+        # 거리 및 비율 계산
+        face_length = np.linalg.norm(A - Q)
+        face_width = np.linalg.norm(np.array(face_landmarks['chin'][0]) - np.array(face_landmarks['chin'][-1]))
+        eye_length = np.linalg.norm(F - H)
+        eyebrow_curve = np.linalg.norm(C - D) + np.linalg.norm(D - E)
+        eye_eyebrow_gap = np.linalg.norm(R - H)
+        cheekbone_width = np.linalg.norm(np.array(face_landmarks['chin'][2]) - np.array(face_landmarks['chin'][-3]))
+        
+        # 분류 기준 적용
+        if eye_length > face_width * 0.3 and eyebrow_curve > face_width * 0.15 and eye_eyebrow_gap < face_length * 0.1:
+            return "고양이상"
+        elif face_length > face_width * 1.3 and Q[1] < I[1]:
+            return "황제상"
+        elif face_length < face_width * 1.1 and eye_length > face_width * 0.25:
+            return "너구리상"
+        elif eye_length < face_width * 0.2 and eyebrow_curve > face_width * 0.2 and cheekbone_width > face_width * 0.5:
+            return "구렁이상"
+        elif cheekbone_width > face_width * 0.6 and face_length > face_width * 1.2:
+            return "이리상"
+        else:
+            return "호랑이상"
+        
     def recognize_face(self, frames):
         """
         실시간 프레임을 입력받아 얼굴을 인식하고 가장 유사한 연예인을 찾는 함수.
@@ -47,6 +86,12 @@ class FaceRecognitionThread(QThread):
         for frame in frames:
             input_image = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
             face_locations = face_recognition.face_locations(input_image)
+            face_landmarks_list = face_recognition.face_landmarks(input_image)
+            if face_landmarks_list:
+                face_type = self.classify_face_type(face_landmarks_list[0])
+                print("얼굴 유형:", face_type)
+            else:
+                print("얼굴을 찾을 수 없습니다.")
             # print(f"감지된 얼굴 개수: {len(face_locations)}")
 
             input_encoding = face_recognition.face_encodings(input_image, face_locations)
