@@ -49,6 +49,12 @@ class ApiThread(QThread):
                 분석할 때 **능력치나 동물명을 직접 언급하지 말고**, 마치 사람을 평가하는 것처럼 작성해줘. 
                 불필요한 부가 설명 없이 2문장으로 답하도록. 답변시 '이 사람은' 으로 시작하는것이 아닌 '당신은' 으로 시작하고 어미는 습니다. 입니다. 등의 말투로 사용해줘
                 능력치 : {}, 닮은 동물 : {}""".format(self.skills, self.animals)
+            
+            text4 = """ 너는 사람의 특성을 분석하여 관상을 판단하는 전문가이다.  
+                다음 능력치 정보와 외모가 유사한 연예인 정보를 바탕으로 다음 알려주는 6가지의 관상중에 고르시오  
+                분석할 때 **능력치나 연예인명을 직접 언급하지 말고**, 마치 사람을 평가하는 것처럼 작성해줘. 
+                불필요한 부가 설명 없이 단어로 답하도록 하시오.
+                6가지 관상 : 호랑이상, 고양이상, 너구리상, 이리상, 구렁이상, 황새상, 능력치 : {}, 닮은 동물 : {}""".format(self.skills, self.celebrity)
 
             # text = """배우나 가수의 이름을 주면 그 사람의 대표작 3개와 해당 연도를 아래 형식으로 답하시오.  
             #     다른 부가 설명 없이 오직 아래 형식으로만 답변하시오.
@@ -108,6 +114,21 @@ class ApiThread(QThread):
                     }
                 ],
             )
+
+            resp4 = client.chat.completions.create(
+                model='gpt-4o',  # 'gpt4o-mini' 대신 'gpt-4-turbo' 사용 추천
+                messages=[
+                    {
+                        'role': 'user', 
+                        'content': [
+                            {
+                                "type" : "text",
+                                "text" : text4
+                            },
+                        ],
+                    }
+                ],
+            )
             # print(resp3.choices[0].message.content)
 
             # response_text = resp["choices"][0]["message"]["content"]
@@ -115,7 +136,7 @@ class ApiThread(QThread):
             # print('-----------------------')
             # print(response_text)
 
-            self.finished_signal.emit({"content": resp.choices[0].message.content, "content2": resp2.choices[0].message.content, "content3": resp3.choices[0].message.content})
+            self.finished_signal.emit({"content": resp.choices[0].message.content, "content2": resp2.choices[0].message.content, "content3": resp3.choices[0].message.content, "content4": resp4.choices[0].message.content})
             # self.finished_signal.emit({"content": "hi"})
         except Exception as e:
             self.finished_signal.emit({"error": str(e)})  # 에러 발생 시

@@ -4,8 +4,8 @@ class Inference:
         skills[0] += 0.05
         skills[1] -= 0.015
         skills[2] += 0.025
-        skills[3] += 0.02
-        skills[4] -= 0.13
+        skills[3] += 0.00
+        skills[4] -= 0.11
         skills[5] += 0.05
 
         self.inf_skills= {
@@ -92,6 +92,22 @@ class Inference:
                     <p class="gold"><b>{}</b></p>
                     <p class="silver"><b>{}</b></p>
                 """
+        
+        self.temp_info = """
+                    <style>
+                        p {{ 
+                            line-height: 140%;
+                            text-align: center;
+                        }}
+                        .title {{ font-size: 26px; }}  /* 🥇 금메달 */
+                        .gold {{ font-size: 40px; }}  /* 🥇 금메달 */
+                        .silver {{ font-size: 26px;
+                                    margin-top: 40px;  }} /* 이전 줄과의 간격 넓히기 */
+                        .bronze {{ font-size: 24px; }} /* 🥉 동메달 */
+                    </style>
+                    <p class="title"><b> 당신의 관상은 !? </b></p>
+                    <p class="gold"><b>{}</b></p>
+                """
 
         for l, v in zip(["리더십", "매력", "신뢰도", "피지컬", "예술", "지능"], skills):
             # default_point = random.randint(40, 60)
@@ -174,7 +190,7 @@ class Inference:
         return careers, animals, careers_scores, animals_scores
 
     def get_formats(self):
-        return self.result_info, self.careers_info, self.animals_info, self.celeb_info
+        return self.result_info, self.careers_info, self.animals_info, self.celeb_info, self.temp_info
     
     def get_skills(self) :
         return self.inf_skills

@@ -12,6 +12,8 @@ import random
 import HexagonChart as hexa
 import Inference as infer
 import Face as face
+import os
+from PIL import Image
 
 delete_jpg_file = "/home/willtek/Bootcamp/application/captured_frame.jpg"
 delete_jpg_file2 = "/home/willtek/Bootcamp/application/captured_frame_original.jpg"
@@ -82,7 +84,7 @@ class CameraApp(QWidget):
         self.start_button.setFont(QFont(self.font_families[0]))
         self.start_button.setObjectName('start')
         self.start_button.setGeometry(512, 400, 180, 100)
-        self.start_button.clicked.connect(lambda:self.start_camera("result_info"))
+        self.start_button.clicked.connect(lambda:self.start_camera("temp"))
         self.start_button.show()
  
         self.job_button = QPushButton("추천 직업", self)
@@ -114,18 +116,18 @@ class CameraApp(QWidget):
         self.reset_button.clicked.connect(self.resetUI)
         self.reset_button.hide()
 
-        self.result_info_button = QPushButton("능력치", self)
+        self.result_info_button = QPushButton("관상", self)
         self.result_info_button.setFont(QFont(self.font_families[0]))
         self.result_info_button.setObjectName('operation')
         self.result_info_button.setGeometry(280, 500, 120, 60)
-        self.result_info_button.clicked.connect(lambda: self.re_game("result_info"))
+        self.result_info_button.clicked.connect(lambda: self.re_game("temp"))
         self.result_info_button.hide()
 
-        self.temp_button = QPushButton("관상", self)
+        self.temp_button = QPushButton("능력치", self)
         self.temp_button.setFont(QFont(self.font_families[0]))
         self.temp_button.setObjectName('result')
         self.temp_button.setGeometry(840, 50, 120, 60)
-        self.temp_button.clicked.connect(lambda: self.re_game("temp"))
+        self.temp_button.clicked.connect(lambda: self.re_game("result_info"))
         self.temp_button.hide()
 
         self.setCursor(Qt.BlankCursor)
@@ -205,6 +207,8 @@ class CameraApp(QWidget):
 
         self.api_result = None
         self.api_result2 = None
+        self.api_result3 = None
+        self.api_result4 = None
 
 
         self.face_thread = face.FaceRecognitionThread()
@@ -419,16 +423,20 @@ class CameraApp(QWidget):
     def makeBox(self, painter):
         """ 능력치 차트 설명서 """
         painter.setPen(QPen(colorList['black'], 10, Qt.SolidLine))
+        painter.setBrush(Qt.NoBrush)
         painter.drawRect(479, 25, 520, 550)
 
         painter.setPen(QPen(colorList['white'], 6, Qt.SolidLine))
+        painter.setBrush(Qt.NoBrush)
         painter.drawRect(479, 25, 520, 550)
 
         font = QFont(self.font_families[0], 16, QFont.Bold)  # 폰트 설정
         painter.setFont(font)
         text_rect = QRect(479, 5, 520, 550)
         painter.setPen(QPen(colorList['black'], 6, Qt.SolidLine))
-
+        painter.setBrush(Qt.NoBrush)
+        painter.fillRect(text_rect, Qt.transparent)
+        # painter.setBrush(Qt.transparent)  # 내부는 투명
         if self.result_type == "job":
             formatted_text = self.careers_info.format(
                 int(self.careers_scores[0]), self.careers[0].split(maxsplit=1)[-1],
@@ -503,17 +511,27 @@ class CameraApp(QWidget):
             painter.restore()
             
         elif self.result_type == "result_info":
-            # text = self.result_info
             font = QFont(self.font_families[0], 18)  # 폰트 설정
             painter.setFont(font)
-            painter.setFont(font)  # 기존 폰트 유지
 
             text_rect = QRectF(479, 25, 500, 550)  # 전체 텍스트 영역
+
+            # ✅ 기존 배경을 투명하게 초기화
+            painter.save()
+            painter.setBrush(Qt.NoBrush)
+            painter.setPen(Qt.NoPen)
+            
+            painter.restore()
 
             # ✅ QTextDocument 사용 (HTML 렌더링 가능)
             doc = QTextDocument()
             doc.setDefaultFont(font)
-            doc.setHtml(self.result_info)
+
+            # ✅ 배경 투명 스타일 적용
+            html_content = f"""
+            <div style="background: transparent; color: black;">{self.result_info}</div>
+            """
+            doc.setHtml(html_content)
 
             # ✅ 세로 중앙 정렬
             total_text_height = doc.size().height()
@@ -521,14 +539,16 @@ class CameraApp(QWidget):
 
             # ✅ 텍스트 출력
             painter.save()
-            painter.translate(text_rect.left()+10, y_offset)
-            doc.drawContents(painter)
+            painter.setBrush(Qt.NoBrush)  # 내부 배경 없애기
+            painter.translate(text_rect.left() + 10, y_offset)
+            doc.drawContents(painter)  # HTML 기반으로 출력
             painter.restore()
 
+            
+
         elif self.result_type == "temp":
-            formatted_text = self.celeb_info.format(
-               self.matched_name,
-               self.api_result2
+            formatted_text = self.temp_info.format(
+               self.api_result4
             )
 
             # ✅ QTextDocument 사용 (HTML 렌더링 가능)
@@ -632,8 +652,6 @@ class CameraApp(QWidget):
         if not self.cam_label.isVisible() and self.skills_mode:
             self.flower_state = False
             self.countdown = 2
-            
-            self.makeBox(painter)
             self.reset_button.show() # reset button 표시
             self.result_info_button.show()
             self.job_button.show()
@@ -696,7 +714,8 @@ class CameraApp(QWidget):
                 self.chart.draw_chart(painter)
                 self.chart.draw_results(painter, self.skills)
             elif self.result_type == "temp":
-                pixmap = QPixmap(self.image_path)  # 경로에서 Pixmap 생성
+
+                pixmap = QPixmap(self.matched_kwansang_path)
                 max_width = 400
                 max_height = 470
 
@@ -712,7 +731,30 @@ class CameraApp(QWidget):
                 x_pos = (470 - x_size) // 2
                 # ✅ QLabel 또는 painter에 출력
                 painter.drawPixmap(x_pos, 20, resized_pixmap)
+                
+                # self.landmark_data
+                height, width, channel = self.landmark_data.shape
+                bytes_per_line = channel * width
+                # self.landmark_data = cv2.cvtColor(self.landmark_data, cv2.COLOR_BGR2RGB)
 
+                # numpy 배열을 QImage로 변환
+                qimg = QImage(self.landmark_data.data, width, height, bytes_per_line, QImage.Format_RGB888)
+                pixmap = QPixmap.fromImage(qimg)
+                max_width = 170
+                max_height = 200
+
+                # ✅ 1단계: 높이를 먼저 550px로 맞추기 (비율 유지)
+                resized_pixmap = pixmap.scaledToHeight(max_height, Qt.SmoothTransformation)
+
+                # ✅ 2단계: 가로가 520px을 초과하면 중앙을 기준으로 크롭
+                if resized_pixmap.width() > max_width:
+                    left = (resized_pixmap.width() - max_width) // 2  # 중앙 기준으로 잘라낼 왼쪽 좌표
+                    rect = QRect(left, 0, max_width, max_height)  # 520x550 크기로 자르기
+                    resized_pixmap = resized_pixmap.copy(rect)
+                # x_size = resized_pixmap.width()
+                # x_pos = (105 - x_size) // 2
+                painter.drawPixmap(475, 15, resized_pixmap)
+            self.makeBox(painter)
             painter.end()
     
     def closeEvent(self, event):
@@ -724,7 +766,7 @@ class CameraApp(QWidget):
         inf = infer.Inference(self.pro.classification(self.cropped_frames))
         self.skills = inf.get_skills()  
         self.careers, self.animals, self.careers_scores, self.animals_scores = inf.infer_careers()
-        self.result_info, self.careers_info, self.animals_info, self.celeb_info = inf.get_formats()
+        self.result_info, self.careers_info, self.animals_info, self.celeb_info, self.temp_info = inf.get_formats()
         frames = self.frames + self.cropped_frames
         self.face_thread.set_frame(frames=frames)
         self.frames = []
@@ -740,14 +782,40 @@ class CameraApp(QWidget):
         self.api_result = data.get("content", "데이터 없음")
         self.api_result2 = data.get("content2", "데이터 없음")
         self.api_result3 = data.get("content3", "데이터 없음")
+        self.api_result4 = data.get("content4", "데이터 없음")
         print("📌 content 값:", self.api_result)  # 터미널에서 확인
         print("📌 content2 값:", self.api_result2)  # 터미널에서 확인
         print("📌 content3 값:", self.api_result3)  # 터미널에서 확인
+        print("📌 content4 값:", self.api_result4)  # 터미널에서 확인
+        matched_name = self.api_result4
+        kwansang_folder = "/home/willtek/Bootcamp/application/resources/kwansang/"
+        image_extensions = [".jpg", ".jfif", ".webp"]
+
+        self.matched_kwansang_path = None
+        for ext in image_extensions:
+            temp_path = os.path.join(kwansang_folder, f"{matched_name}{ext}")
+            if os.path.exists(temp_path):
+                self.matched_kwansang_path = temp_path
+                if ext == ".webp" :
+                    png_path = os.path.splitext(self.matched_kwansang_path)[0] + ".png"
+                    img = Image.open(self.matched_kwansang_path)
+                    img.save(png_path, "PNG")
+                    self.matched_kwansang_path = png_path
+                break
+        
+        if not self.matched_kwansang_path:
+            print("⚠️ 해당 연예인 이미지가 없습니다. 기본 이미지 사용.")
+            self.matched_kwansang_path = "/home/willtek/Bootcamp/application/resources/kwansang/호랑이상.webp"
+        print("self.matched_kwansang_path : ", self.matched_kwansang_path)
     
     def handle_face_response(self, data) :
-        print("data", data)
+        # print("data", data)
         matched_name = data["matched_name"]
         matched_image_path = data["matched_image_path"]
+        # self.landmark_data = data["landmark"]
+        # self.landmark_data = cv2.cvtColor(data["landmark"], cv2.COLOR_BGR2RGB)
+        self.landmark_data = cv2.flip(data["landmark"], 1)
+        # print("matched_image_path : ",matched_image_path)
         if matched_name != None:
             self.matched_name = matched_name
             self.image_path = matched_image_path
