@@ -124,7 +124,7 @@ class CameraApp(QWidget):
 
         self.temp_button = QPushButton("관상", self)
         self.temp_button.setFont(QFont(self.font_families[0]))
-        self.temp_button.setObjectName('operation')
+        self.temp_button.setObjectName('result')
         self.temp_button.setGeometry(840, 50, 120, 60)
         self.temp_button.clicked.connect(lambda: self.re_game("temp"))
         self.temp_button.hide()
