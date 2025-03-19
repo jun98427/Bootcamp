@@ -17,7 +17,7 @@ class Processing :
     def __init__(self):
         self.cropped_face = None
         self. result_list = [-1,-1,-1,-1,-1,-1]
-        self.last_jpg_file = None
+        self.last_cropped_face = None
         
     def detect_face(self,frame):
         """ 현재 프레임을 캡처하여 저장 """
@@ -44,17 +44,17 @@ class Processing :
         return exp_values / np.sum(exp_values)
     
     # 캡쳐된 jpg 파일을 받아서 classification 하고 6개짜리 리스트를 출력
-    def classification_jpg(self):
-        jpg_file = cv2.imread("/home/willtek/Bootcamp/application/captured_frame.jpg")
-        if jpg_file is None:
-            print("이미지를 불러오지 못했습니다. 파일 경로를 확인하세요!")
-        else:
-            print("이미지 로드 성공!")
-        if not np.array_equal(jpg_file, self.last_jpg_file):
+    def classification(self):
+        # jpg_file = cv2.imread("/home/willtek/Bootcamp/application/captured_frame.jpg")
+        # if jpg_file is None:
+        #     print("이미지를 불러오지 못했습니다. 파일 경로를 확인하세요!")
+        # else:
+        #     print("이미지 로드 성공!")
+        if not np.array_equal(self.cropped_face, self.last_cropped_face):
             # cv2.imread("captured_frame.jpg", jpg_file)
             self.result_list = [-1,-1,-1,-1,-1,-1]
             ex = net.create_extractor()
-            cropped_face_resized = cv2.resize(jpg_file, (128, 128), interpolation=cv2.INTER_LINEAR)
+            cropped_face_resized = cv2.resize(self.cropped_face, (128, 128), interpolation=cv2.INTER_LINEAR)
             # RGB to NCNN Mat
             cropped_face_ncnn = ncnn.Mat.from_pixels(cropped_face_resized, ncnn.Mat.PixelType.PIXEL_RGB, 128, 128)
             # Normalize
@@ -69,5 +69,5 @@ class Processing :
             temperature = 3.5
             output = self.softmax_with_temperature(output_np, temperature)
             
-            self.last_jpg_file = jpg_file
+            self.last_cropped_face = self.cropped_face
         return output

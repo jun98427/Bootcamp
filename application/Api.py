@@ -1,4 +1,4 @@
-from PyQt5.QtCore import QObject, QThread, pyqtSignal
+from PyQt5.QtCore import QThread, pyqtSignal
 import os
 import openai
 import json
@@ -23,7 +23,6 @@ class ApiThread(QThread):
             # print("api : ", self.celebrity)
             key = os.getenv("OPENAI_API_KEY")
             client = openai.OpenAI(api_key=key)
-            
             # text = '{} 가수면 대표곡을 배우면 대표작을 알려줘. json 형식으로 key 값은 제목과 년도로 보내줘'.format(self.celebrity)
             # text = '{} 가수면 대표곡을 배우면 대표작을 알려줘. 대표작 명 , 출시 시기 순서로 총 3작품씩 알려줘 '.format(self.celebrity)
 
@@ -75,6 +74,7 @@ class ApiThread(QThread):
                         ],
                     }
                 ],
+                # response_format = "json",
             )
             # print(resp.choices[0].message.content)
 

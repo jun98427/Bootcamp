@@ -3,11 +3,10 @@ import numpy as np
 import face_recognition
 import cv2
 import os
-from PIL import Image
-import matplotlib.pyplot as plt
-import matplotlib.font_manager as fm
+from PyQt5.QtCore import QThread, pyqtSignal
 
-class Celebrity :
+class Celebrity(QThread) :
+    finished_signal = pyqtSignal(dict)  # 완료 신호 (응답 데이터 전달)
     def __init__(self) -> None:
         # ✅ 저장된 벡터 데이터 불러오기
         with open("/home/willtek/Bootcamp/application/resources/face_encodings.pkl", "rb") as f:

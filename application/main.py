@@ -11,8 +11,7 @@ import numpy as np
 import random
 import HexagonChart as hexa
 import Inference as infer
-import os
-import Face as face
+import Face2 as face
 
 delete_jpg_file = "/home/willtek/Bootcamp/application/captured_frame.jpg"
 delete_jpg_file2 = "/home/willtek/Bootcamp/application/captured_frame_original.jpg"
@@ -190,7 +189,7 @@ class CameraApp(QWidget):
         self.countdown = 2
         self.countdown_timer = QTimer(self)
         self.countdown_timer.timeout.connect(self.update_countdown)
-        self.cropped_face = None
+        self.frames = []
         self.line_color = 'white'
 
         self.greenCnt = 0
@@ -205,7 +204,10 @@ class CameraApp(QWidget):
 
         self.api_result = None
         self.api_result2 = None
-        self.face = face.Celebrity()
+
+
+        self.face_thread = face.FaceRecognitionThread()
+        self.face_thread.result_signal.connect(self.handle_face_response)  # 완료 시 실행할 함수 연결
 
     def re_game(self, button_type):
         """다른 게임 선택하기 (세미 초기화)"""
@@ -246,23 +248,23 @@ class CameraApp(QWidget):
         self.countdown = 2
         self.greenCnt = 0
         self.redCnt = 0
-        self.cropped_face = None
+        self.frames = []
         self.line_color = 'white'
         self.capture_data = False
         self.result_type = None
         self.flower_state = True
 
-        if os.path.exists(delete_jpg_file):  # 파일이 존재하는지 확인
-            os.remove(delete_jpg_file)  # 파일 삭제
-            print(f"{delete_jpg_file} 삭제 완료!")
-        else:
-            print("파일이 존재하지 않습니다.")
+        # if os.path.exists(delete_jpg_file):  # 파일이 존재하는지 확인
+        #     os.remove(delete_jpg_file)  # 파일 삭제
+        #     print(f"{delete_jpg_file} 삭제 완료!")
+        # else:
+        #     print("파일이 존재하지 않습니다.")
 
-        if os.path.exists(delete_jpg_file2):  # 파일이 존재하는지 확인
-            os.remove(delete_jpg_file2)  # 파일 삭제
-            print(f"{delete_jpg_file2} 삭제 완료!")
-        else:
-            print("파일이 존재하지 않습니다.")
+        # if os.path.exists(delete_jpg_file2):  # 파일이 존재하는지 확인
+        #     os.remove(delete_jpg_file2)  # 파일 삭제
+        #     print(f"{delete_jpg_file2} 삭제 완료!")
+        # else:
+            # print("파일이 존재하지 않습니다.")
 
         self.update()
 
@@ -310,23 +312,26 @@ class CameraApp(QWidget):
                 # 640 x 480 size
                 if self.cam_label.isVisible() :
                     if face_center_x > 120 and face_center_x <= 520 and face_center_y > 140 and face_center_y <= 340:
-                        self.cropped_face = frame[tmp_y1:tmp_y2, tmp_x1:tmp_x2]
+                        cropped_face = frame[tmp_y1:tmp_y2, tmp_x1:tmp_x2]
                         self.greenCnt += 1
                         self.redCnt = 0
 
                         #5연속시 캡처
                         if self.greenCnt >= 10 :
                             self.line_color = 'green'
-                            self.cropped_face = cv2.cvtColor(self.cropped_face, cv2.COLOR_BGR2RGB)
-                            self.cap.capture_face(self.cropped_face)
-                            self.cap.capture_original_face(frame=frame)
+                            self.frames.append(frame)
+                            self.frames.append(cropped_face)
+                            # self.cropped_face = cv2.cvtColor(self.cropped_face, cv2.COLOR_BGR2RGB)
+                            # self.face_thread.set_frame(frame=frame)
+                            # self.cap.capture_face(self.cropped_face)
+                            # self.cap.capture_original_face(frame=frame)
                             self.greenCnt = 0
-                            tmp_name, tmp_image_path = self.face.guess()
-                            if tmp_name != -1 :
-                                self.matched_name = tmp_name
-                            if tmp_image_path != None :
-                                self.image_path = tmp_image_path
-                                print("matched_name ", self.matched_name, " path ", self.image_path)
+                            # tmp_name, tmp_image_path = self.face.guess()
+                            # if tmp_name != -1 :
+                            #     self.matched_name = tmp_name
+                            # if tmp_image_path != None :
+                            #     self.image_path = tmp_image_path
+                            #     print("matched_name ", self.matched_name, " path ", self.image_path)
                             if not self.countdown_timer.isActive():
                                 self.countdown_timer.start(1000)
         
@@ -716,17 +721,15 @@ class CameraApp(QWidget):
         event.accept()
 
     def start_request(self):
-        inf = infer.Inference(self.pro.classification_jpg())
+        inf = infer.Inference(self.pro.classification())
         self.skills = inf.get_skills()  
         self.careers, self.animals, self.careers_scores, self.animals_scores = inf.infer_careers()
         self.result_info, self.careers_info, self.animals_info, self.celeb_info = inf.get_formats()
 
-        # API 요청을 백그라운드에서 실행
-        self.api_thread = req.ApiThread(self.skills, self.careers[0].split(maxsplit=1)[-1], self.animals[0].split(maxsplit=1)[-1], self.matched_name)
-        self.api_thread.finished_signal.connect(self.handle_response)  # 완료 시 실행할 함수 연결
-        self.api_thread.start()
+        self.face_thread.set_frame(frames=self.frames)
 
-    def handle_response(self, data):
+
+    def handle_api_response(self, data):
         self.loading_label.hide()  # 로딩 메시지 숨김
         self.skills_mode = True
         # print("📌 받은 데이터:", data)  # 터미널에서 확인
@@ -738,6 +741,30 @@ class CameraApp(QWidget):
         print("📌 content 값:", self.api_result)  # 터미널에서 확인
         print("📌 content2 값:", self.api_result2)  # 터미널에서 확인
         print("📌 content3 값:", self.api_result3)  # 터미널에서 확인
+    
+    def handle_face_response(self, data) :
+        print("data", data)
+        matched_name = data["matched_name"]
+        matched_image_path = data["matched_image_path"]
+        if matched_name != None:
+            self.matched_name = matched_name
+            self.image_path = matched_image_path
+
+        # API 요청을 백그라운드에서 실행
+        self.api_thread = req.ApiThread(self.skills, self.careers[0].split(maxsplit=1)[-1], self.animals[0].split(maxsplit=1)[-1], self.matched_name)
+        self.api_thread.finished_signal.connect(self.handle_api_response)  # 완료 시 실행할 함수 연결
+        self.api_thread.start()
+        # matched_name, matched_file_path = data
+        # if matched_name != None:
+        #     self.matched_name = matched_name
+        #     self.image_path = matched_file_path
+        # tmp_name, tmp_image_path = self.face.guess()
+                            # if tmp_name != -1 :
+                            #     self.matched_name = tmp_name
+                            # if tmp_image_path != None :
+                            #     self.image_path = tmp_image_path
+                            #     print("matched_name ", self.matched_name, " path ", self.image_path)
+
 
     def load_stylesheet(self):
         # stylesheet.qss 파일 로드
