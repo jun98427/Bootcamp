@@ -11,7 +11,7 @@ import numpy as np
 import random
 import HexagonChart as hexa
 import Inference as infer
-import Face2 as face
+import Face as face
 
 delete_jpg_file = "/home/willtek/Bootcamp/application/captured_frame.jpg"
 delete_jpg_file2 = "/home/willtek/Bootcamp/application/captured_frame_original.jpg"
