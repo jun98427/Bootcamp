@@ -69,7 +69,7 @@ class FaceRecognitionThread(QThread):
                 cv2.circle(landmark, point, 5, (0, 0, 255), -1)
 
         # 저장 및 반환
-        cv2.imwrite("/home/willtek/Bootcamp/application/captured_frame_centered.jpg", landmark)
+        # cv2.imwrite("/home/willtek/Bootcamp/application/captured_frame_centered.jpg", landmark)
         return landmark
         
     def recognize_face(self, frames):
