@@ -24,7 +24,7 @@ QPushButton#result {
     color: white;
     background-color: rgba(50, 130, 200, 220);
     border-radius: 25px;
-    padding: 15px 10px;
+    padding: 10px 5px;
     border: 2px solid white;
     outline: none; /* 포커스 박스 제거 */
 }
@@ -43,7 +43,7 @@ QPushButton#operation{
     color: black;
     background-color: rgba(70, 220, 200, 220);
     border-radius: 25px;
-    padding: 15 10px;
+    padding: 10 5px;
     border: 2px solid black;
 }
 QPushButton#operation:hover {

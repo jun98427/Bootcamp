@@ -100,12 +100,12 @@ class CameraApp(QWidget):
         self.animal_button.clicked.connect(lambda: self.re_game("animal"))
         self.animal_button.hide()
  
-        self.temp_button = QPushButton("임시 버튼", self)
-        self.temp_button.setFont(QFont(self.font_families[0]))
-        self.temp_button.setObjectName('result')
-        self.temp_button.setGeometry(840, 500, 120, 60)
-        self.temp_button.clicked.connect(lambda: self.re_game("temp"))
-        self.temp_button.hide()
+        self.celeb_button = QPushButton("닮은 연예인", self)
+        self.celeb_button.setFont(QFont(self.font_families[0]))
+        self.celeb_button.setObjectName('result')
+        self.celeb_button.setGeometry(840, 500, 120, 60)
+        self.celeb_button.clicked.connect(lambda: self.re_game("celeb"))
+        self.celeb_button.hide()
 
          # ▶ "초기화" 버튼 추가
         self.reset_button = QPushButton("처음으로", self)
@@ -115,12 +115,19 @@ class CameraApp(QWidget):
         self.reset_button.clicked.connect(self.resetUI)
         self.reset_button.hide()
 
-        self.result_info_button = QPushButton("설명보기", self)
+        self.result_info_button = QPushButton("능력치", self)
         self.result_info_button.setFont(QFont(self.font_families[0]))
         self.result_info_button.setObjectName('operation')
         self.result_info_button.setGeometry(280, 500, 120, 60)
         self.result_info_button.clicked.connect(lambda: self.re_game("result_info"))
         self.result_info_button.hide()
+
+        self.temp_button = QPushButton("관상", self)
+        self.temp_button.setFont(QFont(self.font_families[0]))
+        self.temp_button.setObjectName('operation')
+        self.temp_button.setGeometry(840, 50, 120, 60)
+        self.temp_button.clicked.connect(lambda: self.re_game("temp"))
+        self.temp_button.hide()
 
         self.setCursor(Qt.BlankCursor)
 
@@ -197,7 +204,8 @@ class CameraApp(QWidget):
         self.image_label.setGeometry(90, 90, 300, 300)  # (x, y, width, height)
 
         self.api_result = None
-        self.face = face.Celebrity();
+        self.api_result2 = None
+        self.face = face.Celebrity()
 
     def re_game(self, button_type):
         """다른 게임 선택하기 (세미 초기화)"""
@@ -210,6 +218,7 @@ class CameraApp(QWidget):
         self.start_button.hide()
         self.job_button.show()
         self.animal_button.show()
+        self.celeb_button.show()
         self.temp_button.show()
  
         self.countdown_timer.stop()
@@ -227,6 +236,7 @@ class CameraApp(QWidget):
         self.start_button.show()
         self.job_button.hide()
         self.animal_button.hide()
+        self.celeb_button.hide()
         self.temp_button.hide()
 
         self.flower_timer.start(500)
@@ -418,7 +428,8 @@ class CameraApp(QWidget):
             formatted_text = self.careers_info.format(
                 int(self.careers_scores[0]), self.careers[0].split(maxsplit=1)[-1],
                 int(self.careers_scores[1]), self.careers[1].split(maxsplit=1)[-1],
-                int(self.careers_scores[2]), self.careers[2].split(maxsplit=1)[-1]
+                int(self.careers_scores[2]), self.careers[2].split(maxsplit=1)[-1],
+                self.api_result2
             )
 
             # ✅ QTextDocument 사용 (HTML 렌더링 가능)
@@ -441,7 +452,8 @@ class CameraApp(QWidget):
             formatted_text = self.animals_info.format(
                 int(self.animals_scores[0]), self.animals[0].split(maxsplit=1)[-1],
                 int(self.animals_scores[1]), self.animals[1].split(maxsplit=1)[-1],
-                int(self.animals_scores[2]), self.animals[2].split(maxsplit=1)[-1]
+                int(self.animals_scores[2]), self.animals[2].split(maxsplit=1)[-1],
+                self.api_result3
             )
 
             # ✅ QTextDocument 사용 (HTML 렌더링 가능)
@@ -460,10 +472,30 @@ class CameraApp(QWidget):
             doc.drawContents(painter)  # HTML 기반으로 출력
             painter.restore()
 
-        elif self.result_type == "temp":
+        elif self.result_type == "celeb":
             # self.matched_name, self.image_path
-            text = f"가장 닮은 연예인 : {self.matched_name}"
-            painter.drawText(text_rect, Qt.AlignCenter, text)
+            # text = f"가장 닮은 연예인 : {self.matched_name}"
+            # formatted_silver = "<br>".join(self.api_result.split("\n")) 
+            formatted_text = self.celeb_info.format(
+               self.matched_name,
+               self.api_result
+            )
+
+            # ✅ QTextDocument 사용 (HTML 렌더링 가능)
+            doc = QTextDocument()
+            doc.setHtml(formatted_text)  # ✅ HTML 적용 (가로 정렬 포함)
+            doc.setTextWidth(text_rect.width())
+            doc.setDefaultFont(font)
+
+            # ✅ 세로 중앙 정렬
+            total_text_height = doc.size().height()
+            y_offset = text_rect.top() + (text_rect.height() - total_text_height) / 2
+
+            # ✅ 텍스트 출력
+            painter.save()
+            painter.translate(text_rect.left(), y_offset)  # ✅ x 좌표 조정 (10 제거)
+            doc.drawContents(painter)  # HTML 기반으로 출력
+            painter.restore()
             
         elif self.result_type == "result_info":
             # text = self.result_info
@@ -486,6 +518,28 @@ class CameraApp(QWidget):
             painter.save()
             painter.translate(text_rect.left()+10, y_offset)
             doc.drawContents(painter)
+            painter.restore()
+
+        elif self.result_type == "temp":
+            formatted_text = self.celeb_info.format(
+               self.matched_name,
+               self.api_result2
+            )
+
+            # ✅ QTextDocument 사용 (HTML 렌더링 가능)
+            doc = QTextDocument()
+            doc.setHtml(formatted_text)  # ✅ HTML 적용 (가로 정렬 포함)
+            doc.setTextWidth(text_rect.width())
+            doc.setDefaultFont(font)
+
+            # ✅ 세로 중앙 정렬
+            total_text_height = doc.size().height()
+            y_offset = text_rect.top() + (text_rect.height() - total_text_height) / 2
+
+            # ✅ 텍스트 출력
+            painter.save()
+            painter.translate(text_rect.left(), y_offset)  # ✅ x 좌표 조정 (10 제거)
+            doc.drawContents(painter)  # HTML 기반으로 출력
             painter.restore()
 
     def create_flower(self,is_initial=False):
@@ -579,6 +633,7 @@ class CameraApp(QWidget):
             self.result_info_button.show()
             self.job_button.show()
             self.animal_button.show()
+            self.celeb_button.show()
             self.temp_button.show()
 
             if self.result_type == "job":
@@ -609,7 +664,7 @@ class CameraApp(QWidget):
                     self.image_label.x(), self.label_y + 50,  # Y 좌표 고정
                     self.image_label.width(), self.image_label.height()
                 )
-            elif self.result_type == "temp":
+            elif self.result_type == "celeb":
                 # ✅ 이미지 로드 및 QLabel에 표시
                 pixmap = QPixmap(self.image_path)  # 경로에서 Pixmap 생성
                 max_width = 400
@@ -630,11 +685,28 @@ class CameraApp(QWidget):
             elif self.result_type == "result_info":
                 # self.image_label.hide()
                 hexagon_center_x = 230
-                hexagon_center_y = 250
+                hexagon_center_y = 270
                 hexagon_radius = 160
                 self.chart = hexa.HexagonChart(hexagon_center_x, hexagon_center_y, hexagon_radius, self.font_families[0])
                 self.chart.draw_chart(painter)
-                self.chart.draw_results(painter, self.skills) 
+                self.chart.draw_results(painter, self.skills)
+            elif self.result_type == "temp":
+                pixmap = QPixmap(self.image_path)  # 경로에서 Pixmap 생성
+                max_width = 400
+                max_height = 550
+
+                # ✅ 1단계: 높이를 먼저 550px로 맞추기 (비율 유지)
+                resized_pixmap = pixmap.scaledToHeight(max_height, Qt.SmoothTransformation)
+
+                # ✅ 2단계: 가로가 520px을 초과하면 중앙을 기준으로 크롭
+                if resized_pixmap.width() > max_width:
+                    left = (resized_pixmap.width() - max_width) // 2  # 중앙 기준으로 잘라낼 왼쪽 좌표
+                    rect = QRect(left, 0, max_width, max_height)  # 520x550 크기로 자르기
+                    resized_pixmap = resized_pixmap.copy(rect)
+                x_size = resized_pixmap.width()
+                x_pos = (450 - x_size) // 2
+                # ✅ QLabel 또는 painter에 출력
+                painter.drawPixmap(x_pos, 20, resized_pixmap)
 
             painter.end()
     
@@ -647,10 +719,10 @@ class CameraApp(QWidget):
         inf = infer.Inference(self.pro.classification_jpg())
         self.skills = inf.get_skills()  
         self.careers, self.animals, self.careers_scores, self.animals_scores = inf.infer_careers()
-        self.result_info, self.careers_info, self.animals_info = inf.get_formats()
+        self.result_info, self.careers_info, self.animals_info, self.celeb_info = inf.get_formats()
 
         # API 요청을 백그라운드에서 실행
-        self.api_thread = req.ApiThread(self.matched_name)
+        self.api_thread = req.ApiThread(self.skills, self.careers[0].split(maxsplit=1)[-1], self.animals[0].split(maxsplit=1)[-1], self.matched_name)
         self.api_thread.finished_signal.connect(self.handle_response)  # 완료 시 실행할 함수 연결
         self.api_thread.start()
 
@@ -661,7 +733,11 @@ class CameraApp(QWidget):
 
         # 딕셔너리에서 "content" 값 가져오기
         self.api_result = data.get("content", "데이터 없음")
-        # print("📌 content 값:", self.api_result)  # 터미널에서 확인
+        self.api_result2 = data.get("content2", "데이터 없음")
+        self.api_result3 = data.get("content3", "데이터 없음")
+        print("📌 content 값:", self.api_result)  # 터미널에서 확인
+        print("📌 content2 값:", self.api_result2)  # 터미널에서 확인
+        print("📌 content3 값:", self.api_result3)  # 터미널에서 확인
 
     def load_stylesheet(self):
         # stylesheet.qss 파일 로드

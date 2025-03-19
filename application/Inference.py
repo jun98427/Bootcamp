@@ -38,11 +38,18 @@ class Inference:
                         .gold {{ font-size: 28px; }}  /* 🥇 금메달 */
                         .silver {{ font-size: 26px; }} /* 🥈 은메달 */
                         .bronze {{ font-size: 24px; }} /* 🥉 동메달 */
+                        .text {{ 
+                            font-size: 20px;
+                            text-align: left;  /* 이유만 좌측 정렬 */
+                            margin-left: 10px; /* 약간 여백 추가 가능 */
+                            margin-top: 40px;  /* 이전 줄과의 간격 넓히기 */
+                        }}  
                     </style>
-                    <p class="title"><b>🔥 추천 직업 🔥</b></p>
+                    <p class="title"><b>추천 직업</b></p>
                     <p class="gold">🥇 <b>{}점 : {}</b></p>
                     <p class="silver">🥈 <b>{}점 </b>: {}</p>
                     <p class="bronze">🥉 <b>{}점 </b>: {}</p>
+                    <p class="text"><b>이유 : {}</b></p>
                 """
         
         self.animals_info = """
@@ -55,11 +62,35 @@ class Inference:
                         .gold {{ font-size: 28px; }}  /* 🥇 금메달 */
                         .silver {{ font-size: 26px; }} /* 🥈 은메달 */
                         .bronze {{ font-size: 24px; }} /* 🥉 동메달 */
+                        .text {{ 
+                            font-size: 20px;
+                            text-align: left;  /* 이유만 좌측 정렬 */
+                            margin-left: 10px; /* 약간 여백 추가 가능 */
+                            margin-top: 40px;  /* 이전 줄과의 간격 넓히기 */
+                        }}  
                     </style>
                     <p class="title"><b>나와 닮은 동물</b></p>
                     <p class="gold">🥇 <b>{}점 : {}</b></p>
                     <p class="silver">🥈 <b>{}점 </b>: {}</p>
                     <p class="bronze">🥉 <b>{}점 </b>: {}</p>
+                    <p class="text"><b>이유 : {}</b></p>
+                """
+        
+        self.celeb_info = """
+                    <style>
+                        p {{ 
+                            line-height: 140%;
+                            text-align: center;
+                        }}
+                        .title {{ font-size: 26px; }}  /* 🥇 금메달 */
+                        .gold {{ font-size: 40px; }}  /* 🥇 금메달 */
+                        .silver {{ font-size: 26px;
+                                    margin-top: 40px;  }} /* 이전 줄과의 간격 넓히기 */
+                        .bronze {{ font-size: 24px; }} /* 🥉 동메달 */
+                    </style>
+                    <p class="title"><b> 닮은 연예인 </b></p>
+                    <p class="gold"><b>{}</b></p>
+                    <p class="silver"><b>{}</b></p>
                 """
 
         for l, v in zip(["리더십", "매력", "신뢰도", "피지컬", "예술", "지능"], skills):
@@ -141,7 +172,7 @@ class Inference:
         return careers, animals, careers_scores, animals_scores
 
     def get_formats(self):
-        return self.result_info, self.careers_info, self.animals_info
+        return self.result_info, self.careers_info, self.animals_info, self.celeb_info
     
     def get_skills(self) :
         return self.inf_skills
